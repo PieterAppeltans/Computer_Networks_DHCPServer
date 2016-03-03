@@ -1,0 +1,10 @@
+
+public class MessageBuilder {
+	public MessageBuilder(){}
+	public byte[] makeMessage(){
+		byte[] result;
+		result[1] = new Byte((int) 1);
+		
+		return byte[];
+	}
+}
