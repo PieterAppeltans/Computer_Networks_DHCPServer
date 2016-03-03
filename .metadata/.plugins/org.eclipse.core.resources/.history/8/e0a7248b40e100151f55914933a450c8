@@ -1,0 +1,12 @@
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+
+
+public class DatagramTest {
+	public void main() throws SocketException{
+		DatagramSocket s1 = new DatagramSocket(8888);
+		DatagramSocket s2 = new DatagramSocket(8889);
+		InetAddress IP=s1.getLocalAddress();
+	}
+}
