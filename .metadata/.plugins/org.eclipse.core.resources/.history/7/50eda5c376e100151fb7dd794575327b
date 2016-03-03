@@ -1,0 +1,22 @@
+
+public enum DHCPOpcode {
+	BOOTREQUEST{
+
+		@Override
+		public byte getByte() {
+			// TODO Auto-generated method stub
+			return (byte)1;
+		}
+		
+	},
+	BOOTREPLY{
+
+		@Override
+		public byte getByte() {
+			// TODO Auto-generated method stub
+			return (byte)2;
+		}
+		
+	}
+	public abstract byte getByte();
+}
