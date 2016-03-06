@@ -1,0 +1,26 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
+
+
+public class UDPServerThread implements Runnable {
+
+	private DatagramSocket serverSocket = null;
+    private DatagramPacket receivePacket = null;
+
+    public UDPServerThread(DatagramSocket socket, DatagramPacket packet) {
+        this.serverSocket = socket;
+        this.receivePacket = packet;
+    }
+
+    public void run() {
+    	InetAddress IPAddress = receivePacket.getAddress(); 
+		int port = receivePacket.getPort();
+		sendData = receiveData;
+		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+		serverSocket.send(sendPacket);
+    }
+
+}

@@ -1,20 +1,19 @@
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 public class UDPServer {
-	public static void main(String args[]) throws Exception{          
+	public static void main(String args[]) throws Exception{
+		ExecutorService executor = Executors.newFixedThreadPool(5);
 		DatagramSocket serverSocket = new DatagramSocket(9876);
 		byte[] receiveData = new byte[1024];
-		byte[] sendData = new byte[1024];
 		while(true){                   
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			serverSocket.receive(receivePacket);
 			System.out.println("RECEIVED: " + receiveData);
-			InetAddress IPAddress = receivePacket.getAddress(); 
-			int port = receivePacket.getPort();
-			sendData = receiveData;
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-			serverSocket.send(sendPacket);
-			}
-		} 
+			Runnable thread = new UDPServerThread(serverSocket,receivePacket);
+			executor.execute(thread);
+		}
 	} 
+} 
 

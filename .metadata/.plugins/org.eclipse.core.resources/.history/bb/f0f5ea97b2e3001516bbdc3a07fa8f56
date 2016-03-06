@@ -1,0 +1,37 @@
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Random;
+
+public class MessageBuilder {
+	public MessageBuilder(){}
+	public byte[] generateMessage(DHCPOpcode opcode,DHCPhtype htype,byte[] xid,short secs,
+			byte[] ciaddr,byte[] yiaddr){
+		if (xid == null){
+			xid = new byte[4];
+			ByteBuffer bufxid = ByteBuffer.wrap(xid);
+			Random rand = new Random();
+			int t = rand.nextInt();
+			bufxid.putInt(t);
+		}
+		byte[] result = new byte[100];
+		ByteBuffer buf = ByteBuffer.wrap(result);
+		// opcode
+		buf.put(opcode.getByte());
+		// htype
+		buf.put(htype.getByte());
+		// hlen
+		buf.put((byte) 6);
+		//  hops 
+		buf.put((byte) 0);
+		//xid 
+		buf.put(xid);
+		// secs
+		buf.putShort(secs);
+		// flags
+		buf.put((byte) 0);
+		buf.put((byte) 0);
+		// Begin option met magic cookie en eindig met end
+		System.out.println(Arrays.toString(result));
+		return null;
+	}
+}

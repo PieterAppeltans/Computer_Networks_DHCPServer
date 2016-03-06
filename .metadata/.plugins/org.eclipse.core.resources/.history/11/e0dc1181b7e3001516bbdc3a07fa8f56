@@ -1,0 +1,29 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+
+
+
+public class UDPServerThread implements Runnable {
+
+	private DatagramSocket socket = null;
+    private DatagramPacket packet = null;
+
+    public UDPServerThread(DatagramSocket socket, DatagramPacket packet) {
+        this.socket = socket;
+        this.packet = packet;
+    }
+
+    public void run() {
+        byte[] data;
+        DatagramPacket response = new DatagramPacket(data, data.length,
+            packet.getAddress(), packet.getPort());
+        try {
+			socket.send(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+
+}
