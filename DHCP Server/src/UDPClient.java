@@ -12,7 +12,7 @@ public class UDPClient {
 		clientSocket.send(sendPacket);
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		clientSocket.receive(receivePacket);
-		System.out.println("ANSWER FROM SERVER:\t" + MessageBuilder.printByteArrayHexa(receiveData));
+		System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
 		clientSocket.close();
 		} 
 }

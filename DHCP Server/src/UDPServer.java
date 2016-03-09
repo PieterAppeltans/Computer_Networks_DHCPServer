@@ -11,7 +11,7 @@ public class UDPServer {
 		while(true){                   
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			serverSocket.receive(receivePacket);
-			System.out.println("RECEIVED FROM CLIENT:\t" + MessageBuilder.printByteArrayHexa(receiveData));
+			System.out.println("RECEIVED FROM CLIENT:\t" + DHCPMessage.printByteArrayHexa(receiveData));
 			Runnable thread = new UDPServerThread(serverSocket,receivePacket);
 			executor.execute(thread);
 		}

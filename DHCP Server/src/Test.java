@@ -5,7 +5,7 @@ public class Test {
 
 		// Test sending bytes to UDPServer
 		UDPClient client = new UDPClient();
-		byte[] bytes = new byte[6 ];
+		byte[] bytes = new byte[6];
 		for (int i = 0; i < 6; i++) {
 			bytes[i] = (byte) 0xff; }
 		for (int i=1;i<10;i++){
@@ -13,8 +13,15 @@ public class Test {
 		}
 		
 		// Test building DHCP message format
-		MessageBuilder builder = new MessageBuilder();
-		builder.generateMessage(DHCPOpcode.BOOTREQUEST, DHCPhtype.IEE802, null, (short) 2, local, local, local, local);
+		
+		byte[] chaddr = new byte[16]; 
+		for (int i=0;i<16;i++){
+			chaddr[i] = (byte)255; // arbitrary value
+		}
+		
+		//DHCPMessage message = new DHCPMessage(DHCPOpcode.BOOTREQUEST, DHCPHtype.IEE802, null, (short) 2, false, local, local, local, local, chaddr);
+		DHCPDiscover message = new DHCPDiscover();
+		message.generateMessage();
 		
 	}
 	

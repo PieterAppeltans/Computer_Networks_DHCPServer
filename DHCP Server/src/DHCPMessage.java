@@ -4,10 +4,33 @@ import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
-public class MessageBuilder {
-	public MessageBuilder(){}
-	public byte[] generateMessage(DHCPOpcode opcode,DHCPhtype htype,byte[] xid,short secs,
-			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr){
+public class DHCPMessage {
+	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,byte[] xid,short secs, boolean flag,
+			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr){
+		this.opcode = opcode;
+		this.htype = htype;
+		this.xid = xid;
+		this.secs = secs;
+		this.flag = flag;
+		this.ciaddr = ciaddr;
+		this.yiaddr = yiaddr;
+		this.siaddr = siaddr;
+		this.giaddr = giaddr;
+		this.chaddr = chaddr;
+	}
+	
+	private DHCPOpcode opcode;
+	private DHCPHtype htype;
+	private byte[] xid;
+	private short secs;
+	private boolean flag;
+	private byte[] ciaddr;
+	private byte[] yiaddr;
+	private byte[] siaddr;
+	private byte[] giaddr;
+	private byte[] chaddr;
+	
+	public byte[] generateMessage(){
 		if (xid == null){
 			// generate random 32-bit identifier
 			xid = new byte[4];
@@ -31,7 +54,11 @@ public class MessageBuilder {
 		// secs (2 bytes)
 		buf.putShort(secs);
 		// flags (2 bytes, enkel eerste bit zetten)
-		buf.put((byte) 0);
+		if (flag){
+			buf.put((byte) 0x80);
+		} else {
+			buf.put((byte) 0);
+		}
 		buf.put((byte) 0);
 		// client IP address (4 bytes)
 		buf.put(ciaddr);
@@ -42,15 +69,13 @@ public class MessageBuilder {
 		// gateway IP address (4 bytes)
 		buf.put(giaddr);
 		// client hardware address (16 bytes) -> waarom 16 bytes ipv 6?
-		for (int i=0;i<16;i++){
-			buf.put((byte)255);
-		} 
-		// server name (64 bytes) and boot filename (128 bytes) -> veroorzaakt overflow?
+		buf.put(chaddr);
+		// server name (64 bytes) and boot filename (128 bytes)
 		for (int i=0;i<(64+128);i++){
 			buf.put((byte)0);
 		} 
 		// Begin option met magic cookie(99.130.83.99) en eindig met end
-		buf.put(MessageBuilder.magicCookie);
+		buf.put(DHCPMessage.magicCookie);
 		
 		// print the byte array
 		System.out.println("MESSAGE UNSIGNED INT:\t" + printByteArrayInt(result));
