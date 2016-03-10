@@ -13,8 +13,7 @@ public class MessageBuilder {
 			int t = rand.nextInt();
 			bufxid.putInt(t);
 		}
-		// TODO Throw IllegalArgumentException if parameters don't have the right size.
-		byte[] result = new byte[576];
+		byte[] result = new byte[600];
 		ByteBuffer buf = ByteBuffer.wrap(result);
 		// opcode
 		buf.put(opcode.getByte());
