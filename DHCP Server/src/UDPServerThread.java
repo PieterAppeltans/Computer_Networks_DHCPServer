@@ -16,7 +16,7 @@ public class UDPServerThread implements Runnable {
     }
 
     public void run() {
-    	System.out.println(Thread.currentThread().getName() + "Start");
+    	System.out.println(Thread.currentThread().getName() + " started");
     	InetAddress IPAddress = receivePacket.getAddress(); 
 		int port = receivePacket.getPort();
 		byte[] sendData = receivePacket.getData();

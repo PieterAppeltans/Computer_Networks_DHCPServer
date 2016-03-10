@@ -1,5 +1,6 @@
 import java.io.*; 
 import java.net.*;
+
 public class UDPClient {
 	public UDPClient(){
 	}
@@ -11,7 +12,7 @@ public class UDPClient {
 		clientSocket.send(sendPacket);
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		clientSocket.receive(receivePacket);
-		System.out.println(receiveData.toString());
+		System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
 		clientSocket.close();
 		} 
 }

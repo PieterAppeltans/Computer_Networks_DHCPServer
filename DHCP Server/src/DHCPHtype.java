@@ -1,5 +1,5 @@
 
-public enum DHCPhtype {
+public enum DHCPHtype {
 	ETHERNET{
 		@Override
 		public byte getByte() {
