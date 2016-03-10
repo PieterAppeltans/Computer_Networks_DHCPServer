@@ -88,10 +88,10 @@ public class DHCPMessage {
 		buf.put(new byte[]{ (byte) 0xFF });
 		
 		// print the byte array
-		System.out.println("MESSAGE UNSIGNED INT:\t" + printByteArrayInt(result));
+		//System.out.println("MESSAGE UNSIGNED INT:\t" + printByteArrayInt(result));
 		System.out.println("MESSAGE HEXADECIMAL:\t" + printByteArrayHexa(result));
 		
-		return null;
+		return result;
 	}
 	public static byte[] magicCookie = {(byte)99,(byte)130,(byte)83,(byte)99};
 	

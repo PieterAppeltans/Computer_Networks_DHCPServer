@@ -1,0 +1,7 @@
+
+public class MessageParser {
+	public DHCPMessage parseMessage(byte[]message){
+		
+		return null;
+	}
+}

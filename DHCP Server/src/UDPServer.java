@@ -7,7 +7,7 @@ public class UDPServer {
 	public UDPServer(int port){
 		this.port = port;
 	}
-	public void run(String args[]) throws Exception{
+	public void run() throws Exception{
 		ExecutorService executor = Executors.newFixedThreadPool(5);
 		DatagramSocket serverSocket = new DatagramSocket(this.port);
 		byte[] receiveData = new byte[this.bufferSize];

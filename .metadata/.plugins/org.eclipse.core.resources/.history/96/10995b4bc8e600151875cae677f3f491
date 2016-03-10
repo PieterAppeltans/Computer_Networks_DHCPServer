@@ -1,0 +1,9 @@
+import java.net.InetAddress;
+
+
+public class RunUDPServer {
+	public static void main(String[] args) {
+		UDPServer server = new UDPServer(9876);
+		server.run();
+	}
+}
