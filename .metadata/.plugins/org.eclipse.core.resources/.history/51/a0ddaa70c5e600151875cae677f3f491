@@ -23,7 +23,7 @@ public class UDPClient {
 	 */
 	private InetAddress serverIP;
 	/**
-	 * Storing the port to send the UDP message to.
+	 * Storing the port to send the UDP message to
 	 */
 	private int serverPort;
 	/**
@@ -31,7 +31,7 @@ public class UDPClient {
 	 * @param sendData
 	 * @throws Exception
 	 */
-	public byte[] send(byte[] sendData) throws Exception{       
+	public void send(byte[] sendData) throws Exception{       
 		DatagramSocket clientSocket = new DatagramSocket();     
 		byte[] receiveData = new byte[receiveSize];
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,this.serverIP,this.serverPort);
@@ -40,6 +40,5 @@ public class UDPClient {
 		clientSocket.receive(receivePacket);
 		System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
 		clientSocket.close();
-		return receiveData;
 		} 
 }

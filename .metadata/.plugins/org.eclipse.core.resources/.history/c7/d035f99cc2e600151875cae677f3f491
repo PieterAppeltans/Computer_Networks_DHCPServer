@@ -43,7 +43,7 @@ public class DHCPMessage {
 			int t = rand.nextInt();
 			bufxid.putInt(t);
 		}
-		byte[] result = new byte[576]; // grootte nog aanpassen?
+		byte[] result = new byte[1024]; // grootte nog aanpassen?
 		ByteBuffer buf = ByteBuffer.wrap(result);
 		// opcode (1 byte)
 		buf.put(opcode.getByte());
@@ -108,4 +108,18 @@ public class DHCPMessage {
 		}
 		return builder.toString();
 	}
+	
+	public static byte[] getChaddr() throws UnknownHostException, SocketException{
+		InetAddress ip = InetAddress.getLocalHost();
+		NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+		byte[] mac = network.getHardwareAddress();
+		byte[] chaddr = new byte[16];
+		byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+		System.arraycopy(mac, 0, chaddr, 0, 6);
+		System.arraycopy(empty, 0, chaddr, 6, 10);
+		return chaddr;
+	}
+	
 }
