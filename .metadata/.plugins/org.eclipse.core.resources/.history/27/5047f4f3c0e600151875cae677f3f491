@@ -1,0 +1,9 @@
+
+public class DHCPbidirectionalMap {
+	public static BidirectionalMap<DHCPOpcode, Byte> HTypeMap = new BidirectionalMap();
+	
+	static{
+		HTypeMap.add(DHCPOpcode.BOOTREQUEST,DHCPOpcode.BOOTREQUEST.getByte());
+		HTypeMap.add(DHCPOpcode.BOOTREPLY,DHCPOpcode.BOOTREPLY.getByte());
+	}
+}
