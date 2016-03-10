@@ -1,3 +1,7 @@
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
@@ -104,4 +108,18 @@ public class DHCPMessage {
 		}
 		return builder.toString();
 	}
+	
+	public static byte[] getChaddr() throws UnknownHostException, SocketException{
+		InetAddress ip = InetAddress.getLocalHost();
+		NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+		byte[] mac = network.getHardwareAddress();
+		byte[] chaddr = new byte[16];
+		byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+		System.arraycopy(mac, 0, chaddr, 0, 6);
+		System.arraycopy(empty, 0, chaddr, 6, 10);
+		return chaddr;
+	}
+	
 }

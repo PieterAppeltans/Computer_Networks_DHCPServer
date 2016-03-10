@@ -1,3 +1,6 @@
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+
 
 public class Test {
 
@@ -12,17 +15,12 @@ public class Test {
 			client.send(bytes);
 		}
 		
+		
 		// Test building DHCP message format
 		
-		byte[] chaddr = new byte[16]; 
-		for (int i=0;i<16;i++){
-			chaddr[i] = (byte)255; // arbitrary value
-		}
-		
 		//DHCPMessage message = new DHCPMessage(DHCPOpcode.BOOTREQUEST, DHCPHtype.IEE802, null, (short) 2, false, local, local, local, local, chaddr);
-		DHCPDiscover message = new DHCPDiscover();
+		DHCPDiscover message = new DHCPDiscover(DHCPMessage.getChaddr());
 		message.generateMessage();
-		
 	}
 	
 	public static byte[] local = {(byte)127,(byte)0,(byte)0,(byte)1};
