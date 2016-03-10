@@ -1,7 +1,0 @@
-
-public class MessageBuilder {
-	public MessageBuilder(){}
-	public byte[] makeMessage(){
-		return byte[];
-	}
-}

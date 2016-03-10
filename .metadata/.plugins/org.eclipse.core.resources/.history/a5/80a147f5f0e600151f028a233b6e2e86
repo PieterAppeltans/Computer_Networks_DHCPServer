@@ -23,7 +23,7 @@ public class DHCPClient {
 			}
 		}
 		
-	
+	}
 	public void run(){
 		while (true){
 			if (this.state == DHCPClientStates.INIT){

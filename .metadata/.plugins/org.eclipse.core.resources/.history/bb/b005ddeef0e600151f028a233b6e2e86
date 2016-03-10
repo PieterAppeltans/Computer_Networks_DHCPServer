@@ -17,13 +17,13 @@ public class DHCPClient {
 		}
 		catch (Exception e){
 		}
-		if (returnMessage != null){
+		if (DHCPMessage != null){
 			DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312);
 				
 			}
 		}
 		
-	
+	}
 	public void run(){
 		while (true){
 			if (this.state == DHCPClientStates.INIT){

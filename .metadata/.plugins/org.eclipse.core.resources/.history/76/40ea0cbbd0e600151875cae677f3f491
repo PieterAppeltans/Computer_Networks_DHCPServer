@@ -9,27 +9,11 @@ public class DHCPClient {
 	}
 	private UDPClient udpclient ;
 	private DHCPClientStates state = DHCPClientStates.INIT;
-	public void init() {
+	public void init() throws Exception{
 		DHCPMessage message = new DHCPDiscover(this.getChaddr(),DHCPDiscover.getOptions());
-		byte[] returnMessage = null;
-		try{
-			returnMessage = udpclient.send(message.generateMessage());
-		}
-		catch (Exception e){
-		}
-		if (returnMessage != null){
-			DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312);
-				
-			}
-		}
+		byte[] returnMessage = udpclient.send(message.generateMessage());
+		MessageParser.parseMessage(returnMessage,312);
 		
-	
-	public void run(){
-		while (true){
-			if (this.state == DHCPClientStates.INIT){
-				this.init();
-			}
-		}
 	}
 	public byte[] getChaddr(){
 		try{

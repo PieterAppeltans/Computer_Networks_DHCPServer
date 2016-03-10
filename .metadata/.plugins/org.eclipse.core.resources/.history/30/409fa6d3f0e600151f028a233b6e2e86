@@ -30,10 +30,9 @@ public class MessageParser {
 		byte[] options = new byte[optionLength];
 		buf.get(options);
 		System.out.println(DHCPMessage.printByteArrayHexa(options));
-		System.out.println(MessageParser.parseOptions(options));
 		return null;
 	}
-	public static Map<DHCPOptions,byte[]> parseOptions(byte[] options){
+	public Map<DHCPOptions,byte[]> parseOptions(byte[] options){
 		ByteBuffer buf = ByteBuffer.wrap(options);
 		Map<DHCPOptions,byte[]> result = new HashMap<DHCPOptions, byte[]>();
 		byte[] magicCookie = new byte[4];
@@ -42,19 +41,12 @@ public class MessageParser {
 			
 		}
 		else{
-			boolean ended = false;
-			while(!ended && buf.position() != options.length  ){
+			while(buf.position() != options.length ){
 				byte optionCode = buf.get();
-				if(optionCode == (byte)0xFF){
-					ended = true;
-				} 
-				else if (optionCode != (byte)0){
-					System.out.println(optionCode);
-					int length = (int) buf.get() & 0xFF;
-					byte[] value = new byte[length];
-					buf.get(value);
-					result.put(DHCPbidirectionalMap.OptionsMap.getBackward(optionCode), value);
-				}
+				int length = (int) buf.get() & 0xFF;
+				byte[] value = new byte[length];
+				buf.get(value);
+				result.put(DHCPbidirectionalMap.OptionsMap.getBackward(optionCode), value);
 			}
 		}
 		return result;

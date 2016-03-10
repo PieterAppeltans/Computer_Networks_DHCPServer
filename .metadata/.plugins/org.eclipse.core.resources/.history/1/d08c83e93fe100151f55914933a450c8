@@ -1,7 +1,0 @@
-
-public class DatagramTest {
-	public void main(){
-		s1 = new DatagramSocket(8888);
-		s2 = new DatagramSocket(8889);
-	}
-}
