@@ -1,7 +1,7 @@
 
 public class DHCPOffer extends DHCPMessage {
 	
-	public DHCPOffer(byte[] yiaddr, byte[] siaddr, byte[] chaddr) {
+	public DHCPOffer(byte[] yiaddr, byte[] siaddr, byte[] chaddr, byte[] options) {
 		super(DHCPOpcode.BOOTREPLY, // opcode
 			  DHCPHtype.ETHERNET, // htype
 			  null, // xid
@@ -11,7 +11,8 @@ public class DHCPOffer extends DHCPMessage {
 			  yiaddr,
 			  siaddr,
 			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // giaddr
-			  chaddr
+			  chaddr,
+			  options
 			  );
 		// DHCP option 53: DHCP Offer
 		// DHCP option 1: 255.255.255.0 subnet mask

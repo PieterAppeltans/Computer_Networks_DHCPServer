@@ -19,7 +19,7 @@ public class Test {
 		// Test building DHCP message format
 		
 		//DHCPMessage message = new DHCPMessage(DHCPOpcode.BOOTREQUEST, DHCPHtype.IEE802, null, (short) 2, false, local, local, local, local, chaddr);
-		DHCPDiscover message = new DHCPDiscover(DHCPMessage.getChaddr());
+		DHCPDiscover message = new DHCPDiscover(DHCPMessage.getChaddr(),DHCPDiscover.getOptions());
 		message.generateMessage();
 	}
 	
