@@ -32,6 +32,12 @@ public enum DHCPOptions {
 		@Override
 		public byte getByte() {
 			return (byte)59;
+		}},
+	SERVERIDENTIFIER{
+
+		@Override
+		public byte getByte() {
+			return (byte)54;
 		}};
 	public abstract byte getByte();
 }
