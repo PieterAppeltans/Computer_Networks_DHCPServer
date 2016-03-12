@@ -1,5 +1,5 @@
-
 public enum DHCPHtype {
+	
 	ETHERNET{
 		@Override
 		public byte getByte() {
@@ -10,6 +10,7 @@ public enum DHCPHtype {
 		public byte getByte() {
 			return (byte)6;
 		}};
+	
 	public abstract byte getByte();
 	
 }

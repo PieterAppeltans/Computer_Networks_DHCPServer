@@ -1,5 +1,5 @@
-
 public enum DHCPMessageType {
+	
 	  DHCPDISCOVER{
 		@Override
 		public byte getByte() {
@@ -42,5 +42,7 @@ public enum DHCPMessageType {
 			return 8;
 		}  	  
       };
+	
       public abstract byte getByte();
+      
 }

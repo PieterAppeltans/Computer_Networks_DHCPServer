@@ -3,8 +3,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-
-
 public class UDPServerThread implements Runnable {
 
 	private DatagramSocket serverSocket = null;

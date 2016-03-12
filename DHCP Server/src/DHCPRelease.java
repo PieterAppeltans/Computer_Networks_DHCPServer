@@ -1,9 +1,9 @@
 import java.nio.ByteBuffer;
-
+import java.util.Map;
 
 public class DHCPRelease extends DHCPMessage{
 
-	public DHCPRelease(byte[] ciaddr, byte[] chaddr, byte[] options) {
+	public DHCPRelease(byte[] ciaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
 		
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype

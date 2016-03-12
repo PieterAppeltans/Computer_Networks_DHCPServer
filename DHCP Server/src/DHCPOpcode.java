@@ -1,5 +1,5 @@
-
 public enum DHCPOpcode {
+	
 	BOOTREQUEST{
 
 		@Override
@@ -16,5 +16,7 @@ public enum DHCPOpcode {
 		}
 		
 	};
+	
 	public abstract byte getByte();
+	
 }

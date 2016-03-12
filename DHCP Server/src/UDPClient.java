@@ -1,11 +1,17 @@
-import java.io.*; 
 import java.net.*;
 
 public class UDPClient {
+	
 	public UDPClient(InetAddress serverIP,int serverPort){
+		this(serverIP,serverPort,576); // default receiveSize = 576
+	}
+	
+	public UDPClient(InetAddress serverIP,int serverPort, int receiveSize){
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
+		this.receiveSize = receiveSize;
 	}
+	
 	/**
 	 * A method to set the size of the receive buffer
 	 * @param size Int, desired new size of the receive buffer
@@ -14,18 +20,22 @@ public class UDPClient {
 	public void setReceiveSize(int size){
 		this.receiveSize = size;
 	}
+	
 	/**
 	 * Current value of the receive buffer
 	 */
-	private int receiveSize = 576;
+	private int receiveSize;
+	
 	/**
 	 * Storing the IP address of the server
 	 */
 	private InetAddress serverIP;
+	
 	/**
 	 * Storing the port to send the UDP message to.
 	 */
 	private int serverPort;
+	
 	/**
 	 * 
 	 * @param sendData
@@ -34,12 +44,13 @@ public class UDPClient {
 	public byte[] send(byte[] sendData) throws Exception{       
 		DatagramSocket clientSocket = new DatagramSocket();     
 		byte[] receiveData = new byte[receiveSize];
-		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,this.serverIP,this.serverPort);
+		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
 		clientSocket.send(sendPacket);
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		clientSocket.receive(receivePacket);
 		System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
 		clientSocket.close();
 		return receiveData;
-		} 
+		}
+	
 }

@@ -1,7 +1,5 @@
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-
 
 public class DHCPRequest extends DHCPMessage {
 
@@ -19,10 +17,12 @@ public class DHCPRequest extends DHCPMessage {
 			  options
 			  );
 	}
+	
 	public static Map<DHCPOptions,byte[]> getOptions(){
 		return getOptions(new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x64 }, // 192.168.1.100 requested
 					   	  new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x01 }); // 192.168.1.1 DHCP server
 	}
+	
 	public static Map<DHCPOptions,byte[]> getOptions(byte[] requestedIP, byte[] serverIP){
 		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>(); // grootte nog aanpassen?
 		options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPREQUEST.getByte()});
@@ -30,4 +30,5 @@ public class DHCPRequest extends DHCPMessage {
 		options.put(DHCPOptions.SERVERIDENTIFIER, serverIP); // Server identifier
 		return options;
 	}
+	
 }

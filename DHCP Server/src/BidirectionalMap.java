@@ -1,8 +1,8 @@
 import java.util.Hashtable;
 import java.util.Map;
 
-
 public class BidirectionalMap <K extends Object, V extends Object> {
+	
 	  private Map<K,V> forward = new Hashtable<K, V>();
 	  private Map<V,K> backward = new Hashtable<V, K>();
 
@@ -18,4 +18,5 @@ public class BidirectionalMap <K extends Object, V extends Object> {
 	  public synchronized K getBackward(V key) {
 	    return backward.get(key);
 	  }
+	  
 }

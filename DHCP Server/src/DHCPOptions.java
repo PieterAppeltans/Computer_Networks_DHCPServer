@@ -1,5 +1,5 @@
-
 public enum DHCPOptions {
+	
 	REQUESTEDIPADDRESS{
 		@Override
 		public byte getByte() {
@@ -39,5 +39,7 @@ public enum DHCPOptions {
 		public byte getByte() {
 			return (byte)54;
 		}};
+	
 	public abstract byte getByte();
+	
 }

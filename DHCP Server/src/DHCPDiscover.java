@@ -1,7 +1,5 @@
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-
 
 public class DHCPDiscover extends DHCPMessage {
 
@@ -20,8 +18,9 @@ public class DHCPDiscover extends DHCPMessage {
 			  options
 			  );
 	}
+	
 	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
-		return DHCPDiscover.getDefaultOptions(new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x64 }); // 192.168.1.100 requested
+		return DHCPDiscover.getDefaultOptions(null); // no specific IP requested
 	}
 	
 	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] requestedIP){
@@ -36,4 +35,5 @@ public class DHCPDiscover extends DHCPMessage {
 		//  			   Request Subnet Mask (1), Router (3), Domain Name (15), Domain Name Server (6)			(see Wikipedia)
 		return options;
 	}
+	
 }

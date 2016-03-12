@@ -1,15 +1,10 @@
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
-
 import javax.xml.bind.DatatypeConverter;
 
 public class DHCPMessage {
+	
 	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,byte[] xid,short secs, boolean flag,
 			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options){
 		this.opcode = opcode;
@@ -36,9 +31,11 @@ public class DHCPMessage {
 	private byte[] giaddr;
 	private byte[] chaddr;
 	private Map<DHCPOptions,byte[]> options;
+	
 	public Map<DHCPOptions,byte[]> getOptionsMap(){
 		return options;
 	}
+	
 	public byte[] generateMessage(){
 		if (xid == null){
 			// generate random 32-bit identifier
@@ -93,7 +90,6 @@ public class DHCPMessage {
 		    buf.put((byte) value.length);
 		    buf.put(value);
 		}
-		
 		// end
 		buf.put(new byte[]{ (byte) 0xFF });
 		
@@ -103,6 +99,26 @@ public class DHCPMessage {
 		
 		return result;
 	}
+	
+	public void print(){
+		System.out.println("opcode:\t " + opcode);
+		System.out.println("htype:\t " + htype);
+		System.out.println("xid:\t " + DHCPMessage.printByteArrayHexa(xid));
+		System.out.println("secs:\t " + secs);
+		System.out.println("flag:\t " + flag);
+		System.out.println("ciaddr:\t " + DHCPMessage.printByteArrayHexa(ciaddr));
+		System.out.println("yiaddr:\t " + DHCPMessage.printByteArrayHexa(yiaddr));
+		System.out.println("siaddr:\t " + DHCPMessage.printByteArrayHexa(siaddr));
+		System.out.println("giaddr:\t " + DHCPMessage.printByteArrayHexa(giaddr));
+		System.out.println("chaddr:\t " + DHCPMessage.printByteArrayHexa(chaddr));
+		System.out.println("options:\t ");
+		for (Map.Entry<DHCPOptions, byte[]> entry : options.entrySet()) {
+		    DHCPOptions key = entry.getKey();
+		    byte[] value = entry.getValue();
+		    System.out.println("\t" + key + "\t" + DHCPMessage.printByteArrayHexa(value));
+		}
+	}
+	
 	public static byte[] magicCookie = {(byte)99,(byte)130,(byte)83,(byte)99};
 	
 	public static String printByteArrayInt(byte[] byteArray){
@@ -111,7 +127,6 @@ public class DHCPMessage {
 			builder.append(Byte.toUnsignedInt(byteArray[i]));
 			builder.append("\t");
 		}
-
 		return builder.toString();
 	}
 	
@@ -124,4 +139,5 @@ public class DHCPMessage {
 		}
 		return builder.toString();
 	}
+	
 }
