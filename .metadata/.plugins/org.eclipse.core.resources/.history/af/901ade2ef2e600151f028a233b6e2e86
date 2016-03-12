@@ -1,0 +1,64 @@
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+
+public class MessageParser {
+	public static DHCPMessage parseMessage(byte[]message,int optionLength){
+		ByteBuffer buf = ByteBuffer.wrap(message);
+		byte opcode = buf.get();
+		buf.position(4);
+		byte[] xid = new byte[4];
+		buf.get(xid);
+		buf.position(12);
+		byte[] ciaddr = new byte[4];
+		buf.get(ciaddr);
+		System.out.println(buf.position());
+		byte[] yiaddr = new byte[4];
+		buf.get(yiaddr);
+		byte[] siaddr = new byte[4];
+		buf.get(siaddr);
+		byte[] giaddr = new byte[4];
+		buf.get(giaddr);
+		System.out.println(buf.position());
+		byte[] chaddr = new byte[16];
+		buf.get(chaddr);
+		System.out.println(DHCPMessage.printByteArrayHexa(chaddr));
+		buf.position(buf.position()+64+128);
+		byte[] options = new byte[optionLength];
+		buf.get(options);
+		System.out.println(DHCPMessage.printByteArrayHexa(options));
+		System.out.println(MessageParser.parseOptions(options));
+		return null;
+	}
+	public static Map<DHCPOptions,byte[]> parseOptions(byte[] options){
+		ByteBuffer buf = ByteBuffer.wrap(options);
+		Map<DHCPOptions,byte[]> result = new HashMap<DHCPOptions, byte[]>();
+		byte[] magicCookie = new byte[4];
+		buf.get(magicCookie);
+		if (!Arrays.equals(magicCookie,MessageParser.magicCookie)){
+			
+		}
+		else{
+			boolean ended = false;
+			while(!ended && buf.position() != options.length  ){
+				byte optionCode = buf.get();
+				if(optionCode == (byte)0xFF){
+					ended = true;
+					System.out.println(optionCode);
+				} 
+				else if (optionCode != (byte)0){
+					System.out.println(optionCode);
+					int length = (int) buf.get() & 0xFF;
+					byte[] value = new byte[length];
+					buf.get(value);
+					result.put(DHCPbidirectionalMap.OptionsMap.getBackward(optionCode), value);
+				}
+			}
+		}
+		return result;
+	}
+	public static byte[] magicCookie = new byte[]{(byte)99,(byte)130,(byte)83,(byte)99};
+}

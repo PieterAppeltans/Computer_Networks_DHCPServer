@@ -1,0 +1,1 @@
+int num = (int) bite & 0xFF

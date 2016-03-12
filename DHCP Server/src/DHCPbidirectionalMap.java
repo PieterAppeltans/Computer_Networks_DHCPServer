@@ -18,5 +18,12 @@ public class DHCPbidirectionalMap {
 		OptionsMap.add(DHCPOptions.REQUESTEDIPADDRESS,DHCPOptions.REQUESTEDIPADDRESS.getByte());
 		OptionsMap.add(DHCPOptions.REBINGINGTIME, DHCPOptions.REBINGINGTIME.getByte());
 		OptionsMap.add(DHCPOptions.RENEWALTIME, DHCPOptions.RENEWALTIME.getByte());
+		OptionsMap.add(DHCPOptions.SERVERIDENTIFIER, DHCPOptions.SERVERIDENTIFIER.getByte());
+	}
+	public static BidirectionalMap<DHCPMessageType, Byte> MessageTypeMap = new BidirectionalMap();
+	static{
+		for(DHCPMessageType type : DHCPMessageType.values()){
+			MessageTypeMap.add(type,type.getByte());
+		};
 	}
 }

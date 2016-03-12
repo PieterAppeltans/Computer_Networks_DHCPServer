@@ -4,13 +4,14 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Random;
 
 import javax.xml.bind.DatatypeConverter;
 
 public class DHCPMessage {
 	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,byte[] xid,short secs, boolean flag,
-			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, byte[] options){
+			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options){
 		this.opcode = opcode;
 		this.htype = htype;
 		this.xid = xid;
@@ -34,8 +35,10 @@ public class DHCPMessage {
 	private byte[] siaddr;
 	private byte[] giaddr;
 	private byte[] chaddr;
-	private byte[] options;
-	
+	private Map<DHCPOptions,byte[]> options;
+	public Map<DHCPOptions,byte[]> getOptionsMap(){
+		return options;
+	}
 	public byte[] generateMessage(){
 		if (xid == null){
 			// generate random 32-bit identifier
@@ -83,7 +86,14 @@ public class DHCPMessage {
 		// Begin option met magic cookie(99.130.83.99) en eindig met end
 		buf.put(DHCPMessage.magicCookie);
 		// options
-		buf.put(options);
+		for (Map.Entry<DHCPOptions, byte[]> entry : options.entrySet()) {
+		    DHCPOptions key = entry.getKey();
+		    byte[] value = entry.getValue();
+		    buf.put(key.getByte());
+		    buf.put((byte) value.length);
+		    buf.put(value);
+		}
+		
 		// end
 		buf.put(new byte[]{ (byte) 0xFF });
 		

@@ -1,9 +1,11 @@
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class DHCPAck extends DHCPMessage {
 
-	public DHCPAck(byte[] yiaddr, byte[] siaddr, byte[] chaddr, byte[] options) {
+	public DHCPAck(byte[] yiaddr, byte[] siaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
 		super(DHCPOpcode.BOOTREPLY, // opcode
 			  DHCPHtype.ETHERNET, // htype
 			  null, // xid
@@ -18,28 +20,21 @@ public class DHCPAck extends DHCPMessage {
 			  );
 	}
 	
-	public static byte[] getOptions(){
-		return getOptions(new byte[]{ (byte) 0, (byte) 0x01, (byte) 0x51, (byte) 0x80 }, // 86400s (1 day)
+	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
+		return DHCPAck.getDefaultOptions(new byte[]{ (byte) 0, (byte) 0x01, (byte) 0x51, (byte) 0x80 }, // 86400s (1 day)
 					   	  new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x01 }, // 192.168.1.1 DHCP server
 					   	  true);
 	}
 	
-	public static byte[] getOptions(byte[] leaseTime, byte[] serverIp, boolean acknowledged){
-		byte[] options = new byte[100]; // grootte nog aanpassen?
-		ByteBuffer optionBuffer = ByteBuffer.wrap(options);
-		optionBuffer.put(new byte[]{ (byte) DHCPOptions.DHCPMESSAGETYPE.getByte() }); // DHCP Message type
-		optionBuffer.put(new byte[]{ (byte) 1 }); // lengths
+	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] leaseTime, byte[] serverIp, boolean acknowledged){
+		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>(); // grootte nog aanpassen?
 		if (acknowledged){
-			optionBuffer.put(new byte[]{ (byte) 5 }); // DHCPACK
+			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPACK.getByte()});
 		} else {
-			optionBuffer.put(new byte[]{ (byte) 6 }); // DHCPNAK
+			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()});// DHCPNAK
 		}
-		optionBuffer.put(new byte[]{ (byte) DHCPOptions.IPADDRESSLEASETIME.getByte() }); // IP Address Lease Time
-		optionBuffer.put(new byte[]{ (byte) 4 }); // length
-		optionBuffer.put(leaseTime); // lease time in seconds
-		optionBuffer.put(new byte[]{ (byte) DHCPOptions.SERVERIDENTIFIER.getByte() }); // Server identifier
-		optionBuffer.put(new byte[]{ (byte) 4 }); // length
-		optionBuffer.put(serverIp); // IP address of the server
+		options.put(DHCPOptions.IPADDRESSLEASETIME, leaseTime);
+		options.put(DHCPOptions.SERVERIDENTIFIER, serverIp);
 		// EXTRA:
 		// 
 		// DHCP option 1: 255.255.255.0 subnet mask

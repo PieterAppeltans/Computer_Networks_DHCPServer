@@ -1,5 +1,7 @@
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.Map;
+import java.util.Random;
 
 
 
@@ -10,19 +12,32 @@ public class DHCPClient {
 	private UDPClient udpclient ;
 	private DHCPClientStates state = DHCPClientStates.INIT;
 	public void init() {
-		DHCPMessage message = new DHCPDiscover(this.getChaddr(),DHCPDiscover.getOptions());
-		byte[] returnMessage = null;
-		try{
-			returnMessage = udpclient.send(message.generateMessage());
-		}
-		catch (Exception e){
-		}
-		if (returnMessage != null){
-			DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312);
-				
+		int timeout = 0;
+		while (state == DHCPClientStates.INIT){
+			if (timeout != 0){
+				Random rand = new Random();
+				try{
+				Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
+				}
+				catch(Exception e){}
+			}
+			DHCPMessage message = new DHCPDiscover(this.getChaddr(),DHCPDiscover.getDefaultOptions());
+			byte[] returnMessage = null;
+			try{
+				returnMessage = udpclient.send(message.generateMessage());
+			}	
+			catch (Exception e){
+			}
+			if (returnMessage != null){
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312);
+				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0])== DHCPMessageType.DHCPOFFER){
+					//TODO Handel offer -> and go to Requesting state
+				}
 			}
 		}
-		
+	}
 	
 	public void run(){
 		while (true){
