@@ -3,10 +3,10 @@ import java.util.Map;
 
 public class DHCPRequest extends DHCPMessage {
 
-	public DHCPRequest(byte[] siaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPRequest(int xid,byte[] siaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype
-			  null, // xid
+			  xid, // xid
 			  (short) 0, // secs
 			  false, // flag
 			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // ciaddr
@@ -18,12 +18,12 @@ public class DHCPRequest extends DHCPMessage {
 			  );
 	}
 	
-	public static Map<DHCPOptions,byte[]> getOptions(){
-		return getOptions(new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x64 }, // 192.168.1.100 requested
+	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
+		return getDefaultOptions(new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x64 }, // 192.168.1.100 requested
 					   	  new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x01 }); // 192.168.1.1 DHCP server
 	}
 	
-	public static Map<DHCPOptions,byte[]> getOptions(byte[] requestedIP, byte[] serverIP){
+	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] requestedIP, byte[] serverIP){
 		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>(); // grootte nog aanpassen?
 		options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPREQUEST.getByte()});
 		options.put(DHCPOptions.REQUESTEDIPADDRESS,requestedIP); // Requested IP Address

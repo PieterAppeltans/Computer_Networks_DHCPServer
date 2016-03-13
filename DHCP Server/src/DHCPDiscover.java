@@ -3,11 +3,11 @@ import java.util.Map;
 
 public class DHCPDiscover extends DHCPMessage {
 
-	public DHCPDiscover(byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPDiscover(int xid,byte[] chaddr, Map<DHCPOptions,byte[]> options) {
 		
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype
-			  null, // xid
+			  xid, // xid
 			  (short) 0, // secs
 			  true, // flag
 			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // ciaddr

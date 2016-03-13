@@ -10,8 +10,7 @@ public class MessageParser {
 		byte opcode = buf.get();
 		byte htype = buf.get();
 		buf.position(4);
-		byte[] xid = new byte[4];
-		buf.get(xid);
+		int xid = buf.getInt();
 		short secs = buf.getShort();
 		byte[] flagArray = new byte[2];
 		buf.get(flagArray);

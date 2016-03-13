@@ -3,11 +3,11 @@ import java.util.Map;
 
 public class DHCPRelease extends DHCPMessage{
 
-	public DHCPRelease(byte[] ciaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPRelease(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
 		
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype
-			  null, // xid
+			  xid, // xid
 			  (short) 0, // secs
 			  false, // flag
 			  ciaddr, // ciaddr

@@ -5,7 +5,7 @@ import javax.xml.bind.DatatypeConverter;
 
 public class DHCPMessage {
 	
-	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,byte[] xid,short secs, boolean flag,
+	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,int xid,short secs, boolean flag,
 			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options){
 		this.opcode = opcode;
 		this.htype = htype;
@@ -22,7 +22,7 @@ public class DHCPMessage {
 	
 	private DHCPOpcode opcode;
 	private DHCPHtype htype;
-	private byte[] xid;
+	private int xid;
 	private short secs;
 	private boolean flag;
 	private byte[] ciaddr;
@@ -31,19 +31,24 @@ public class DHCPMessage {
 	private byte[] giaddr;
 	private byte[] chaddr;
 	private Map<DHCPOptions,byte[]> options;
-	
+	public int getXid(){
+		return this.xid;
+	}
+	public byte[] getSiaddr(){
+		return this.siaddr;
+	}
+	public byte[] getYiaddr(){
+		return this.yiaddr;
+	}
 	public Map<DHCPOptions,byte[]> getOptionsMap(){
 		return options;
 	}
 	
 	public byte[] generateMessage(){
-		if (xid == null){
+		if (this.xid == 0){
 			// generate random 32-bit identifier
-			xid = new byte[4];
-			ByteBuffer bufxid = ByteBuffer.wrap(xid);
 			Random rand = new Random();
-			int t = rand.nextInt();
-			bufxid.putInt(t);
+			this.xid = rand.nextInt();
 		}
 		byte[] result = new byte[576]; // grootte nog aanpassen?
 		ByteBuffer buf = ByteBuffer.wrap(result);
@@ -56,7 +61,7 @@ public class DHCPMessage {
 		// hops (1 byte)
 		buf.put((byte) 0);
 		// xid (4 bytes)
-		buf.put(xid);
+		buf.putInt(xid);
 		// secs (2 bytes)
 		buf.putShort(secs);
 		// flags (2 bytes, enkel eerste bit zetten)
@@ -103,7 +108,7 @@ public class DHCPMessage {
 	public void print(){
 		System.out.println("opcode:\t " + opcode);
 		System.out.println("htype:\t " + htype);
-		System.out.println("xid:\t " + DHCPMessage.printByteArrayHexa(xid));
+		System.out.println("xid:\t " + xid);
 		System.out.println("secs:\t " + secs);
 		System.out.println("flag:\t " + flag);
 		System.out.println("ciaddr:\t " + DHCPMessage.printByteArrayHexa(ciaddr));

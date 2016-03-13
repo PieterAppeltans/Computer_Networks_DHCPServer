@@ -1,5 +1,7 @@
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
 
@@ -12,18 +14,30 @@ public class DHCPClient {
 	
 	private UDPClient udpclient;
 	private DHCPClientStates state;
-	
+	private byte[] serverIdentifier;
+	private byte[] offeredAdrress;
+	private int xid;
+	private LocalDateTime renewingTime;
+	private LocalDateTime reboundingTime;
 	public void init() {
-		int timeout = 5; // temporarily set to avoid rapid message iteration
+		int timeout = 0; 
+		Random rand = new Random();
 		while (state == DHCPClientStates.INIT){
-			if (timeout != 0){
-				Random rand = new Random();
+			if (timeout != 0){				
 				try{
 				Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
 				}
 				catch(Exception e){}
 			}
-			DHCPMessage message = new DHCPDiscover(this.getChaddr(),DHCPDiscover.getDefaultOptions()); // xid needs to remain the same?
+			else{
+				try {
+					Thread.sleep((long)(rand.nextFloat()*9000+1000)); //  The client SHOULD wait a random time between one and ten seconds to desynchronize the use of DHCP at startup.
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} 
+			}
+			this.xid = rand.nextInt();
+			DHCPMessage message = new DHCPDiscover(xid,this.getChaddr(),DHCPDiscover.getDefaultOptions()); // xid needs to remain the same?
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage());
@@ -36,13 +50,110 @@ public class DHCPClient {
 				parsedMessage.print();
 				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
-				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER){
-					//TODO Handel offer -> and go to Requesting state
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER 
+						&& parsedMessage.getXid() == this.xid ){
+					this.serverIdentifier = parsedMessage.getSiaddr();
+					this.offeredAdrress = parsedMessage.getYiaddr();
+					this.state = DHCPClientStates.REQUESTING;
+					
+				}
+				else{
+					if (timeout == 0){
+						timeout = 4; // delay before the first retransmission SHOULD be 4 seconds
+					}
+					else{
+						timeout = Math.max(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
+					}
+				}
+			}
+			else{
+				if (timeout == 0){
+					timeout = 4; // delay before the first retransmission SHOULD be 4 seconds
+				}
+				else{
+					timeout = Math.max(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
 				}
 			}
 		}
 	}
-	
+	public void request(){
+		int timeout = 0; 
+		Random rand = new Random();
+		while (this.state == DHCPClientStates.REQUESTING){
+			if (timeout != 0){				
+				try{
+				Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
+				}
+				catch(Exception e){}
+			}
+			DHCPMessage message = new DHCPRequest(this.xid,this.serverIdentifier,this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAdrress,this.serverIdentifier));
+			byte[] returnMessage = null;
+			LocalDateTime startTime = LocalDateTime.now();
+			try{
+				returnMessage = udpclient.send(message.generateMessage());
+			}	
+			catch (Exception e){
+			}
+			if (returnMessage != null){
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+				System.out.println("PARSED RECEIVED MESSAGE:");
+				parsedMessage.print();
+				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
+						&& parsedMessage.getXid() == this.xid ){
+					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					ByteBuffer buf1 = ByteBuffer.wrap(t1);
+					this.renewingTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+					byte[] t2 = parsedOptions.get(DHCPOptions.REBINGINGTIME);
+					ByteBuffer buf2 = ByteBuffer.wrap(t2);
+					this.reboundingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+					this.state = DHCPClientStates.BOUND;
+					
+				}
+				else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
+						&& parsedMessage.getXid() == this.xid ){
+					this.state = DHCPClientStates.INIT;
+				}
+				else{ // if the client receives neither a DHCPACK or a DHCPNAK message.  The client retransmits the DHCPREQUEST
+					if (timeout == 0){
+						timeout = 4;
+					}
+					else if (timeout >= 64){
+						/*If the client
+					     receives neither a DHCPACK or a DHCPNAK message after employing the
+					     retransmission algorithm, the client reverts to INIT state and
+					     restarts the initialization process.*/
+						this.state = DHCPClientStates.INIT;   
+						// The client SHOULD notify the user that the initialization process has failed and is restarting.
+						ErrorPrinter.print("Returing to INIT state");
+					}
+					else{
+						timeout = timeout*2;
+					}
+				}
+			}
+			else{
+				if (timeout == 0){
+					timeout = 4;
+				}
+				else if (timeout >= 64){
+					this.state = DHCPClientStates.INIT;
+				}
+				else{
+					timeout = timeout*2;
+				}
+			}
+		}
+	}
+	private long toUnsigned(int signed){
+		if (signed<0){
+			return (long) signed + (long) Math.pow(2,31);
+		}
+		else{
+			return signed;
+		}
+	}
 	public void run(){
 		while (true){
 			if (this.state == DHCPClientStates.INIT){

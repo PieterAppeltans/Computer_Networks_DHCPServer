@@ -3,10 +3,10 @@ import java.util.Map;
 
 public class DHCPOffer extends DHCPMessage {
 	
-	public DHCPOffer(byte[] yiaddr, byte[] siaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPOffer(int xid, byte[] yiaddr, byte[] siaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
 		super(DHCPOpcode.BOOTREPLY, // opcode
 			  DHCPHtype.ETHERNET, // htype
-			  null, // xid
+			  xid, // xid
 			  (short) 0, // secs
 			  false, // flag
 			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // ciaddr
