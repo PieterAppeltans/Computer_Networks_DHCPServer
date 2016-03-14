@@ -29,7 +29,7 @@ public class DHCPAck extends DHCPMessage {
 		if (acknowledged){
 			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPACK.getByte()});
 		} else {
-			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()});// DHCPNAK
+			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()}); // DHCPNAK
 		}
 		options.put(DHCPOptions.IPADDRESSLEASETIME, leaseTime);
 		options.put(DHCPOptions.SERVERIDENTIFIER, serverIp);

@@ -15,19 +15,22 @@ public class DHCPClient {
 	private UDPClient udpclient;
 	private DHCPClientStates state;
 	private byte[] serverIdentifier;
-	private byte[] offeredAdrress;
+	private byte[] offeredAddress;
 	private int xid;
-	private LocalDateTime renewingTime;
-	private LocalDateTime reboundingTime;
+	private LocalDateTime renewalTime;
+	private LocalDateTime rebindingTime;
+	
 	public void init() {
 		int timeout = 0; 
 		Random rand = new Random();
 		while (state == DHCPClientStates.INIT){
 			if (timeout != 0){				
 				try{
-				Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
+					Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
 				}
-				catch(Exception e){}
+				catch(Exception e){
+					
+				}
 			}
 			else{
 				try {
@@ -53,16 +56,16 @@ public class DHCPClient {
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER 
 						&& parsedMessage.getXid() == this.xid ){
 					this.serverIdentifier = parsedMessage.getSiaddr();
-					this.offeredAdrress = parsedMessage.getYiaddr();
+					this.offeredAddress = parsedMessage.getYiaddr();
 					this.state = DHCPClientStates.REQUESTING;
-					
+					System.out.println("TO REQUESTING STATE");	
 				}
 				else{
 					if (timeout == 0){
 						timeout = 4; // delay before the first retransmission SHOULD be 4 seconds
 					}
 					else{
-						timeout = Math.max(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
+						timeout = Math.min(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
 					}
 				}
 			}
@@ -71,11 +74,12 @@ public class DHCPClient {
 					timeout = 4; // delay before the first retransmission SHOULD be 4 seconds
 				}
 				else{
-					timeout = Math.max(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
+					timeout = Math.min(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
 				}
 			}
 		}
 	}
+	
 	public void request(){
 		int timeout = 0; 
 		Random rand = new Random();
@@ -86,7 +90,7 @@ public class DHCPClient {
 				}
 				catch(Exception e){}
 			}
-			DHCPMessage message = new DHCPRequest(this.xid,this.serverIdentifier,this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAdrress,this.serverIdentifier));
+			DHCPMessage message = new DHCPRequest(this.xid,this.serverIdentifier,this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier));
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -104,15 +108,16 @@ public class DHCPClient {
 						&& parsedMessage.getXid() == this.xid ){
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					ByteBuffer buf1 = ByteBuffer.wrap(t1);
-					this.renewingTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
-					byte[] t2 = parsedOptions.get(DHCPOptions.REBINGINGTIME);
+					this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
 					ByteBuffer buf2 = ByteBuffer.wrap(t2);
-					this.reboundingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+					this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
 					this.state = DHCPClientStates.BOUND;
-					
+					System.out.println("TO BOUND STATE");
 				}
 				else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
 						&& parsedMessage.getXid() == this.xid ){
+					ErrorPrinter.print("Returning to INIT state due to DHCPNAK.");
 					this.state = DHCPClientStates.INIT;
 				}
 				else{ // if the client receives neither a DHCPACK or a DHCPNAK message.  The client retransmits the DHCPREQUEST
@@ -126,7 +131,7 @@ public class DHCPClient {
 					     restarts the initialization process.*/
 						this.state = DHCPClientStates.INIT;   
 						// The client SHOULD notify the user that the initialization process has failed and is restarting.
-						ErrorPrinter.print("Returing to INIT state");
+						ErrorPrinter.print("Returning to INIT state due to not receiving an answer.");
 					}
 					else{
 						timeout = timeout*2;
@@ -138,7 +143,13 @@ public class DHCPClient {
 					timeout = 4;
 				}
 				else if (timeout >= 64){
+					/*If the client
+				     receives neither a DHCPACK or a DHCPNAK message after employing the
+				     retransmission algorithm, the client reverts to INIT state and
+				     restarts the initialization process.*/
 					this.state = DHCPClientStates.INIT;
+					// The client SHOULD notify the user that the initialization process has failed and is restarting.
+					ErrorPrinter.print("Returning to INIT state due to not receiving an answer.");
 				}
 				else{
 					timeout = timeout*2;
@@ -146,6 +157,7 @@ public class DHCPClient {
 			}
 		}
 	}
+	
 	private long toUnsigned(int signed){
 		if (signed<0){
 			return (long) signed + (long) Math.pow(2,31);
@@ -154,9 +166,10 @@ public class DHCPClient {
 			return signed;
 		}
 	}
+	
 	public void run(){
 		while (true){
-			if (this.state == DHCPClientStates.INIT){
+			if (this.state == DHCPClientStates.INIT){ // already gets checked within init()?
 				this.init();
 			}
 		}

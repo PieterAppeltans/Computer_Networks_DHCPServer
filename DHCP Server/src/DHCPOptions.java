@@ -27,14 +27,12 @@ public enum DHCPOptions {
 		public byte getByte() {
 			return (byte)58;
 		}},
-	REBINGINGTIME{
-
+	REBINDINGTIME{
 		@Override
 		public byte getByte() {
 			return (byte)59;
 		}},
 	SERVERIDENTIFIER{
-
 		@Override
 		public byte getByte() {
 			return (byte)54;

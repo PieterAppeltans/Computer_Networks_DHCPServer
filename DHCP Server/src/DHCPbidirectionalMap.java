@@ -20,7 +20,7 @@ public class DHCPbidirectionalMap {
 		OptionsMap.add(DHCPOptions.DHCPMESSAGETYPE, DHCPOptions.DHCPMESSAGETYPE.getByte());
 		OptionsMap.add(DHCPOptions.IPADDRESSLEASETIME, DHCPOptions.IPADDRESSLEASETIME.getByte());
 		OptionsMap.add(DHCPOptions.REQUESTEDIPADDRESS,DHCPOptions.REQUESTEDIPADDRESS.getByte());
-		OptionsMap.add(DHCPOptions.REBINGINGTIME, DHCPOptions.REBINGINGTIME.getByte());
+		OptionsMap.add(DHCPOptions.REBINDINGTIME, DHCPOptions.REBINDINGTIME.getByte());
 		OptionsMap.add(DHCPOptions.RENEWALTIME, DHCPOptions.RENEWALTIME.getByte());
 		OptionsMap.add(DHCPOptions.SERVERIDENTIFIER, DHCPOptions.SERVERIDENTIFIER.getByte());
 	}
