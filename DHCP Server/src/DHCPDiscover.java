@@ -24,8 +24,8 @@ public class DHCPDiscover extends DHCPMessage {
 	}
 	
 	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] requestedIP){
-		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>(); // grootte nog aanpassen?
-		options.put(DHCPOptions.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()}); // DHCP Message type
+		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
+		options.put(DHCPOptions.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()});
 		if (requestedIP != null){
 			options.put(DHCPOptions.REQUESTEDIPADDRESS,requestedIP);
 		}

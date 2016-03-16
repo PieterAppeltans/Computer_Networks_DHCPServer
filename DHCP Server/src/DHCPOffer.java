@@ -24,7 +24,7 @@ public class DHCPOffer extends DHCPMessage {
 	}
 	
 	public static Map<DHCPOptions,byte[]> getOptions(byte[] leaseTime, byte[] serverIp){
-		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>(); // grootte nog aanpassen?
+		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
 		options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPOFFER.getByte()});
 		options.put(DHCPOptions.IPADDRESSLEASETIME, leaseTime);
 		options.put(DHCPOptions.SERVERIDENTIFIER, serverIp);

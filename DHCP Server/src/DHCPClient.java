@@ -2,8 +2,13 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
+import java.time.chrono.MinguoChronology;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Map;
 import java.util.Random;
+
+import org.omg.CORBA.TIMEOUT;
 
 public class DHCPClient {
 	
@@ -16,9 +21,11 @@ public class DHCPClient {
 	private DHCPClientStates state;
 	private byte[] serverIdentifier;
 	private byte[] offeredAddress;
+	private byte[] receivedAddress;
 	private int xid;
 	private LocalDateTime renewalTime;
 	private LocalDateTime rebindingTime;
+	private LocalDateTime leaseTime;
 	
 	public void init() {
 		int timeout = 0; 
@@ -40,7 +47,7 @@ public class DHCPClient {
 				} 
 			}
 			this.xid = rand.nextInt();
-			DHCPMessage message = new DHCPDiscover(xid,this.getChaddr(),DHCPDiscover.getDefaultOptions()); // xid needs to remain the same?
+			DHCPMessage message = new DHCPDiscover(xid,this.getChaddr(),DHCPDiscover.getDefaultOptions());
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage());
@@ -90,7 +97,7 @@ public class DHCPClient {
 				}
 				catch(Exception e){}
 			}
-			DHCPMessage message = new DHCPRequest(this.xid,this.serverIdentifier,this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier));
+			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier));
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -112,7 +119,11 @@ public class DHCPClient {
 					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
 					ByteBuffer buf2 = ByteBuffer.wrap(t2);
 					this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
+					ByteBuffer buf3 = ByteBuffer.wrap(t3);
+					this.leaseTime = startTime.plusSeconds(toUnsigned(buf3.getInt()));
 					this.state = DHCPClientStates.BOUND;
+					this.receivedAddress = parsedMessage.getYiaddr();
 					System.out.println("TO BOUND STATE");
 				}
 				else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
@@ -158,6 +169,131 @@ public class DHCPClient {
 		}
 	}
 	
+	public void release(){
+		if (this.state == DHCPClientStates.BOUND){
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getOptions());
+			byte[] returnMessage = null;
+			try{
+				returnMessage = udpclient.send(message.generateMessage()); // Does the server return anything at all?
+			}	
+			catch (Exception e){
+			}
+		}
+	}
+	
+	public void renew(){
+		int timeout = 0;
+		System.out.println("TO RENEWING STATE");
+		this.state = DHCPClientStates.RENEWING;
+		while (this.state == DHCPClientStates.RENEWING){
+			if (timeout != 0){				
+				try{
+					Thread.sleep(timeout*1000);
+				}
+				catch(Exception e){}
+			}
+			// This message will be unicast.
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.getChaddr(),DHCPRequest.getDefaultOptions());
+			byte[] returnMessage = null;
+			LocalDateTime startTime = LocalDateTime.now();
+			try{
+				returnMessage = udpclient.send(message.generateMessage());
+			}	
+			catch (Exception e){
+			}
+			if (returnMessage != null){
+				
+				// The server may choose not to extend the lease (as a policy decision by
+			    // the network administrator), but should return a DHCPACK message regardless. -> 0 when not extended?
+				
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+				System.out.println("PARSED RECEIVED MESSAGE:");
+				parsedMessage.print();
+				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
+						&& parsedMessage.getXid() == this.xid ){
+					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					ByteBuffer buf1 = ByteBuffer.wrap(t1);
+					this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
+					ByteBuffer buf2 = ByteBuffer.wrap(t2);
+					this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
+					ByteBuffer buf3 = ByteBuffer.wrap(t3);
+					this.leaseTime = startTime.plusSeconds(toUnsigned(buf3.getInt()));
+					this.state = DHCPClientStates.BOUND;
+					System.out.println("TO BOUND STATE");
+				}
+			} else {
+				// If the client receives no response to its DHCPREQUEST message, the client SHOULD wait one-half
+				// of the remaining time until T2 (in RENEWING state), down to a minimum of
+				// 60 seconds, before retransmitting the DHCPREQUEST message.
+				timeout = Math.max( 60, (int) (0.5*LocalDateTime.now().until(this.rebindingTime, ChronoUnit.SECONDS)) );
+				// If no DHCPACK arrives before time T2, the client moves to REBINDING
+				// state and sends (via broadcast) a DHCPREQUEST message to extend its
+				// lease.
+				if (this.rebindingTime.isBefore(LocalDateTime.now())){
+					this.rebind();
+				}
+			}
+		}
+	}
+	
+	public void rebind(){
+		int timeout = 0;
+		System.out.println("TO REBINDING STATE");
+		this.state = DHCPClientStates.REBINDING;
+		while (this.state == DHCPClientStates.REBINDING){
+			if (timeout != 0){				
+				try{
+					Thread.sleep(timeout*1000);
+				}
+				catch(Exception e){}
+			}
+			// This message MUST be broadcast to the 0xffffffff IP broadcast address.
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.getChaddr(),DHCPRequest.getDefaultOptions());
+			byte[] returnMessage = null;
+			LocalDateTime startTime = LocalDateTime.now();
+			try{
+				returnMessage = udpclient.send(message.generateMessage());
+			}	
+			catch (Exception e){
+			}
+			if (returnMessage != null){			
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+				System.out.println("PARSED RECEIVED MESSAGE:");
+				parsedMessage.print();
+				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
+						&& parsedMessage.getXid() == this.xid ){
+					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					ByteBuffer buf1 = ByteBuffer.wrap(t1);
+					this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
+					ByteBuffer buf2 = ByteBuffer.wrap(t2);
+					this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
+					ByteBuffer buf3 = ByteBuffer.wrap(t3);
+					this.leaseTime = startTime.plusSeconds(toUnsigned(buf3.getInt()));
+					this.state = DHCPClientStates.BOUND;
+					System.out.println("TO BOUND STATE");
+				}
+			} else {
+				// If the client receives no response to its DHCPREQUEST message, the client SHOULD wait one-half of
+				// the remaining lease time (in REBINDING state), down to a minimum of
+				// 60 seconds, before retransmitting the DHCPREQUEST message.
+				timeout = Math.max( 60, (int) (0.5*LocalDateTime.now().until(this.leaseTime, ChronoUnit.SECONDS)) );
+				// If the lease expires before the client receives a DHCPACK, the client
+				// moves to INIT state.
+				if (this.leaseTime.isBefore(LocalDateTime.now())){
+					this.state = DHCPClientStates.INIT;
+				}
+			}
+		}
+	}
+	
 	private long toUnsigned(int signed){
 		if (signed<0){
 			return (long) signed + (long) Math.pow(2,31);
@@ -171,6 +307,11 @@ public class DHCPClient {
 		while (true){
 			if (this.state == DHCPClientStates.INIT){ // already gets checked within init()?
 				this.init();
+				this.request();
+			} else {
+				if (this.renewalTime.isBefore(LocalDateTime.now())){
+					this.renew();
+				}		
 			}
 		}
 	}
