@@ -25,11 +25,11 @@ public class DHCPAck extends DHCPMessage {
 	}
 	
 	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] leaseTime, byte[] serverIp, boolean acknowledged){
-		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>(); // grootte nog aanpassen?
+		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
 		if (acknowledged){
 			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPACK.getByte()});
 		} else {
-			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()});// DHCPNAK
+			options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()});
 		}
 		options.put(DHCPOptions.IPADDRESSLEASETIME, leaseTime);
 		options.put(DHCPOptions.SERVERIDENTIFIER, serverIp);
