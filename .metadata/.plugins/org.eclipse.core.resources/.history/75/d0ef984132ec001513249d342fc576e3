@@ -15,7 +15,6 @@ public class DHCPClient {
 	public DHCPClient(InetAddress DHCPServerAdrress,int port){
 		udpclient = new UDPClient(DHCPServerAdrress,port);
 		state = DHCPClientStates.INIT;
-		chaddr = chaddr;
 	}
 	
 	private UDPClient udpclient;
@@ -50,7 +49,7 @@ public class DHCPClient {
 				} 
 			}
 			this.xid = rand.nextInt();
-			DHCPMessage message = new DHCPDiscover(xid,this.chaddr,DHCPDiscover.getDefaultOptions());
+			DHCPMessage message = new DHCPDiscover(xid,this.getChaddr(),DHCPDiscover.getDefaultOptions());
 			System.out.println("----------------------------------------------------------------------------");
 			System.out.println("Sending Discover message");
 			message.print();
@@ -103,7 +102,7 @@ public class DHCPClient {
 				}
 				catch(Exception e){}
 			}
-			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.chaddr,DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier,20));
+			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier,20));
 			System.out.println("----------------------------------------------------------------------------");
 			System.out.println("Sending Request message");
 			message.print();
@@ -192,7 +191,7 @@ public class DHCPClient {
 	
 	public void release(){
 		if (this.state == DHCPClientStates.BOUND){
-			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.chaddr,DHCPRelease.getDefaultOptions());
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getDefaultOptions());
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage()); // Does the server return anything at all?
@@ -214,7 +213,7 @@ public class DHCPClient {
 				catch(Exception e){}
 			}
 			// This message will be unicast.
-			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions());
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.getChaddr(),DHCPRequest.getDefaultOptions());
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -286,7 +285,7 @@ public class DHCPClient {
 				catch(Exception e){}
 			}
 			// This message MUST be broadcast to the 0xffffffff IP broadcast address.
-			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions());
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.getChaddr(),DHCPRequest.getDefaultOptions());
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -362,8 +361,9 @@ public class DHCPClient {
 			}
 		}
 	}
-	private byte [] chaddr;
+	
 	public byte[] getChaddr(){
+		
 		try{
 			InetAddress ip = InetAddress.getLocalHost();
 			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
