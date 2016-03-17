@@ -15,8 +15,8 @@ public class UDPServer {
 		while(true){                   
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			serverSocket.receive(receivePacket);
-			System.out.println("RECEIVED FROM CLIENT:\t" + DHCPMessage.printByteArrayHexa(receiveData));
-			Runnable thread = new UDPServerThread(serverSocket,receivePacket);
+			//System.out.println("RECEIVED FROM CLIENT:\t" + DHCPMessage.printByteArrayHexa(receiveData));
+			Runnable thread = new UDPServerThread(serverSocket,receivePacket,server);
 			executor.execute(thread);
 		}
 	}
@@ -28,7 +28,7 @@ public class UDPServer {
 	public void setBufferSize(int buffersize){
 		this.bufferSize = buffersize;
 	}
-	
+	private DHCPServer server = new DHCPServer("options.txt");
 	private int bufferSize = 576;
 	private int port;
 	

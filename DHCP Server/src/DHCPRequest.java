@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class DHCPRequest extends DHCPMessage {
 
-	public DHCPRequest(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPRequest(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOption,byte[]> options) {
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype
 			  xid, // xid
@@ -19,23 +19,23 @@ public class DHCPRequest extends DHCPMessage {
 			  );
 	}
 	
-	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
+	public static Map<DHCPOption,byte[]> getDefaultOptions(){
 		return getDefaultOptions(null, null,0);
 	}
 	
-	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] requestedIP, byte[] serverIP,int requestedLeaseTime){
-		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
-		options.put(DHCPOptions.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPREQUEST.getByte()});
+	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] requestedIP, byte[] serverIP,int requestedLeaseTime){
+		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
+		options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPREQUEST.getByte()});
 		if (requestedIP != null){
-			options.put(DHCPOptions.REQUESTEDIPADDRESS,requestedIP);
+			options.put(DHCPOption.REQUESTEDIPADDRESS,requestedIP);
 		}
 		if (serverIP != null){
-			options.put(DHCPOptions.SERVERIDENTIFIER, serverIP);
+			options.put(DHCPOption.SERVERIDENTIFIER, serverIP);
 		}
 		if (requestedLeaseTime != 0){
 			ByteBuffer b = ByteBuffer.allocate(4);
 			b.putInt(requestedLeaseTime);
-			options.put(DHCPOptions.IPADDRESSLEASETIME, b.array());
+			options.put(DHCPOption.IPADDRESSLEASETIME, b.array());
 		}
 		return options;
 	}

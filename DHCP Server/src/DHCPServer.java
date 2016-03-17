@@ -1,10 +1,22 @@
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.*;
 
 
 public class DHCPServer {
-	private Map<InetAddress,Map<String,Object>> leasedIP = new Hashtable<InetAddress, Map<String, Object>>();
+	public DHCPServer(String string){
+		
+	}
+	private byte[] start;
+	private byte[] end;
+	private byte[] mask;
+	private int defaultLeaseTime;
+	private int maxLeaseTime;
+	private int minLeaseTime;
+	private byte[] serverIP;
+	private Map<InetAddress,Object[]> leasedIP = new Hashtable<InetAddress, Object[]>();
+	private Map<InetAddress,Object[]> offeredIP = new Hashtable<InetAddress,Object[]>();
 	/**
 	 * A method that generate a new InetAddress based on the client identifier
 	 * @param clientIdentifier Unique client identifier, used to try to give the same client the same InetAddress if available
@@ -14,31 +26,94 @@ public class DHCPServer {
 		return null;
 	}
 	/**
+	 * 
+	 * @return
+	 */
+	private boolean inRange(byte[] ipaddr){
+		return false;
+	}
+	private boolean inUse(byte[] ipaddr){
+		return false;
+	}
+	/**
 	 * Adding a new lease to the map leasedIP
 	 * @param ipaddress The address which is leased
 	 * @param clientIdentifier A unique client identifier
 	 * @param endOfLease Time at which lease expires
 	 */
-	private void addNewLease(InetAddress ipaddress, byte[] clientIdentifier,LocalDateTime endOfLease){}
+	private void addNewLease(InetAddress ipaddress, byte[] clientIdentifier,int endOfLease){
+		leasedIP.put(ipaddress,new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)endOfLease)});
+	}
+	private void removeLease(InetAddress toBeRemoved){
+		leasedIP.remove(toBeRemoved);
+	}
 	/**
 	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
 	 */
-	private void removeExpiredLeases(){}
+	private void removeExpiredLeases(){
+		// TODO check if all keys are checked
+		for (InetAddress key : leasedIP.keySet()) {
+			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
+			if (endOfLease.isBefore(LocalDateTime.now())){
+				removeLease(key);
+			}
+		}
+	}
 	/**
 	 * Returning a DHCPOffer given the received DHCPDiscoverMessage.
 	 * @param message the received DHCPDiscoverMessage that is used to make the offer
 	 * @return
 	 */
-	/*
-	 * Making an offer you cann't refuse
+	private DHCPOffer processDiscover(DHCPMessage message){
+		Map<DHCPOption,byte[]>options = message.getOptionsMap();
+		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
+		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
+		ByteBuffer buf = ByteBuffer.wrap(t);
+		int leaseTime = buf.getInt();
+		if ((IP == null) || !(inRange(IP) && !inUse(IP)) ){
+			IP = generateNewInetAddress(message.getChaddr()).getAddress();
+		}
+		if (leaseTime == 0){
+			leaseTime = defaultLeaseTime;
+		}
+		else if (leaseTime < minLeaseTime){
+			leaseTime =minLeaseTime;
+		}
+		else if (leaseTime > maxLeaseTime){
+			leaseTime = maxLeaseTime;
+		}
+		return new DHCPOffer(message.getXid(), IP, this.serverIP,message.getChaddr() , DHCPOffer.getDefaultOptions(leaseTime, this.serverIP));
+	}
+	/**
+	 * 
+	 * @param message
+	 * @return
 	 */
-	private DHCPOffer makeDHCPOffer(DHCPDiscover message){
+	private DHCPAck processRequest(DHCPMessage message){
 		return null;
 	}
-	private DHCPAck answerRequest(DHCPRequest message){
-		return null;
-	}
-	public DHCPMessage answerMessage(){
-		return null;
+	private void processRelease(DHCPMessage message){}
+	/**
+	 * 
+	 * @return
+	 */
+	public DHCPMessage answerMessage(byte[] receivedMessage){
+		removeExpiredLeases();
+		DHCPMessage parsedMessage = MessageParser.parseMessage(receivedMessage, 312);
+		Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+		byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+		if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPDISCOVER ){
+			return processDiscover(parsedMessage);
+		}
+		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPREQUEST ){
+			return processRequest(parsedMessage);
+		}
+		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPRELEASE ){
+			processRelease(parsedMessage);
+			return null;
+		}
+		else{
+			return null;
+		}
 	}
 }

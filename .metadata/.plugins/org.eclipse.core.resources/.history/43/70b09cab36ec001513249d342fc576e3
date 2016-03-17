@@ -1,0 +1,80 @@
+import java.net.InetAddress;
+import java.time.LocalDateTime;
+import java.util.*;
+
+
+public class DHCPServer {
+	public DHCPServer(String[] optionFile){
+		
+	}
+	private byte[] start;
+	private byte[] end;
+	private byte[] mask;
+	private int defaultLeaseTime;
+	private int maxLeaseTime;
+	private int minLeaseTime;
+	private Map<InetAddress,Object[]> leasedIP = new Hashtable<InetAddress, Object[]>();
+	/**
+	 * A method that generate a new InetAddress based on the client identifier
+	 * @param clientIdentifier Unique client identifier, used to try to give the same client the same InetAddress if available
+	 * @return
+	 */
+	private InetAddress generateNewInetAddress (byte[] clientIdentifier){
+		return null;
+	}
+	/**
+	 * 
+	 * @return
+	 */
+	private boolean inRange(InetAddress ipaddr){
+		return false;
+	}
+	private boolean inUse(InetAddress ipaddr){
+		return false;
+	}
+	/**
+	 * Adding a new lease to the map leasedIP
+	 * @param ipaddress The address which is leased
+	 * @param clientIdentifier A unique client identifier
+	 * @param endOfLease Time at which lease expires
+	 */
+	private void addNewLease(InetAddress ipaddress, byte[] clientIdentifier,LocalDateTime endOfLease){
+		if (ipaddress == null){
+			ipaddress = generateNewInetAddress(clientIdentifier);
+		}
+		else if (!(inRange(ipaddress) && !inUse(ipaddress))){
+			ipaddress = generateNewInetAddress(clientIdentifier);
+		}
+		if (endOfLease == null){
+			endOfLease = LocalDateTime.now().plusSeconds(defaultLeaseTime);
+		}
+		leasedIP.put(ipaddress,new Object[]{clientIdentifier,endOfLease});
+	}
+	/**
+	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
+	 */
+	private void removeExpiredLeases(){}
+	/**
+	 * Returning a DHCPOffer given the received DHCPDiscoverMessage.
+	 * @param message the received DHCPDiscoverMessage that is used to make the offer
+	 * @return
+	 */
+	private DHCPOffer makeDHCPOffer(DHCPDiscover message){
+		return null;
+	}
+	/**
+	 * 
+	 * @param message
+	 * @return
+	 */
+	private DHCPAck answerRequest(DHCPRequest message){
+		return null;
+	}
+	/**
+	 * 
+	 * @return
+	 */
+	public DHCPMessage answerMessage(){
+		return null;
+	}
+}

@@ -3,7 +3,7 @@ import java.util.Map;
 
 public class DHCPDiscover extends DHCPMessage {
 
-	public DHCPDiscover(int xid,byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPDiscover(int xid,byte[] chaddr, Map<DHCPOption,byte[]> options) {
 		
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype
@@ -19,15 +19,15 @@ public class DHCPDiscover extends DHCPMessage {
 			  );
 	}
 	
-	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
+	public static Map<DHCPOption,byte[]> getDefaultOptions(){
 		return DHCPDiscover.getDefaultOptions(null); // no specific IP requested
 	}
 	
-	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] requestedIP){
-		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
-		options.put(DHCPOptions.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()});
+	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] requestedIP){
+		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
+		options.put(DHCPOption.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()});
 		if (requestedIP != null){
-			options.put(DHCPOptions.REQUESTEDIPADDRESS,requestedIP);
+			options.put(DHCPOption.REQUESTEDIPADDRESS,requestedIP);
 		}
 		// EXTRA:
 		//

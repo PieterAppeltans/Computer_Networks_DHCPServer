@@ -1,0 +1,43 @@
+public enum DHCPOptions {
+	
+	REQUESTEDIPADDRESS{
+		@Override
+		public byte getByte() {
+			return (byte)50;
+		}
+		
+	},
+	IPADDRESSLEASETIME{
+		@Override
+		public byte getByte() {
+			return (byte) 51;
+		}},
+	OPTIONOVERLOAD{
+		@Override
+		public byte getByte() {
+			return (byte)52;
+		}},
+	DHCPMESSAGETYPE{
+		@Override
+		public byte getByte() {
+			return (byte)53;
+		}},
+	RENEWALTIME{
+		@Override
+		public byte getByte() {
+			return (byte)58;
+		}},
+	REBINDINGTIME{
+		@Override
+		public byte getByte() {
+			return (byte)59;
+		}},
+	SERVERIDENTIFIER{
+		@Override
+		public byte getByte() {
+			return (byte)54;
+		}};
+	
+	public abstract byte getByte();
+	
+}

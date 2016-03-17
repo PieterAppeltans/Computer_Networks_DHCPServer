@@ -1,0 +1,39 @@
+import java.util.HashMap;
+import java.util.Map;
+
+public class DHCPDiscover extends DHCPMessage {
+
+	public DHCPDiscover(int xid,byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+		
+		super(DHCPOpcode.BOOTREQUEST, // opcode
+			  DHCPHtype.ETHERNET, // htype
+			  xid, // xid
+			  (short) 0, // secs
+			  true, // flag
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // ciaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // yiaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // siaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // giaddr
+			  chaddr,
+			  options
+			  );
+	}
+	
+	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
+		return DHCPDiscover.getDefaultOptions(null); // no specific IP requested
+	}
+	
+	public static Map<DHCPOptions,byte[]> getDefaultOptions(byte[] requestedIP){
+		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
+		options.put(DHCPOptions.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()});
+		if (requestedIP != null){
+			options.put(DHCPOptions.REQUESTEDIPADDRESS,requestedIP);
+		}
+		// EXTRA:
+		//
+		// DHCP option 55: Parameter Request List:
+		//  			   Request Subnet Mask (1), Router (3), Domain Name (15), Domain Name Server (6)			(see Wikipedia)
+		return options;
+	}
+	
+}

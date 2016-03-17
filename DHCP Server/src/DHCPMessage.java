@@ -6,7 +6,7 @@ import javax.xml.bind.DatatypeConverter;
 public class DHCPMessage {
 	
 	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,int xid,short secs, boolean flag,
-			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options){
+			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, Map<DHCPOption,byte[]> options){
 		this.opcode = opcode;
 		this.htype = htype;
 		this.xid = xid;
@@ -30,17 +30,20 @@ public class DHCPMessage {
 	private byte[] siaddr;
 	private byte[] giaddr;
 	private byte[] chaddr;
-	private Map<DHCPOptions,byte[]> options;
+	private Map<DHCPOption,byte[]> options;
 	public int getXid(){
 		return this.xid;
 	}
 	public byte[] getSiaddr(){
 		return this.siaddr;
 	}
+	public byte[] getChaddr(){
+		return this.chaddr;
+	}
 	public byte[] getYiaddr(){
 		return this.yiaddr;
 	}
-	public Map<DHCPOptions,byte[]> getOptionsMap(){
+	public Map<DHCPOption,byte[]> getOptionsMap(){
 		return options;
 	}
 	
@@ -88,8 +91,8 @@ public class DHCPMessage {
 		// Begin option met magic cookie(99.130.83.99) en eindig met end
 		buf.put(DHCPMessage.magicCookie);
 		// options
-		for (Map.Entry<DHCPOptions, byte[]> entry : options.entrySet()) {
-		    DHCPOptions key = entry.getKey();
+		for (Map.Entry<DHCPOption, byte[]> entry : options.entrySet()) {
+		    DHCPOption key = entry.getKey();
 		    byte[] value = entry.getValue();
 		    buf.put(key.getByte());
 		    buf.put((byte) value.length);
@@ -117,8 +120,8 @@ public class DHCPMessage {
 		System.out.println("giaddr:\t " + DHCPMessage.printByteArrayHexa(giaddr));
 		System.out.println("chaddr:\t " + DHCPMessage.printByteArrayHexa(chaddr));
 		System.out.println("options:\t ");
-		for (Map.Entry<DHCPOptions, byte[]> entry : options.entrySet()) {
-		    DHCPOptions key = entry.getKey();
+		for (Map.Entry<DHCPOption, byte[]> entry : options.entrySet()) {
+		    DHCPOption key = entry.getKey();
 		    byte[] value = entry.getValue();
 		    System.out.println("\t" + key + "\t" + DHCPMessage.printByteArrayHexa(value));
 		}

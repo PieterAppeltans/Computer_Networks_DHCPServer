@@ -64,8 +64,8 @@ public class DHCPClient {
 				System.out.println("PARSED RECEIVED MESSAGE:");
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
 				parsedMessage.print();
-				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
-				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER 
 						&& parsedMessage.getXid() == this.xid ){
 					this.serverIdentifier = parsedMessage.getSiaddr();
@@ -118,15 +118,15 @@ public class DHCPClient {
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
 				System.out.println("PARSED RECEIVED MESSAGE:");
 				parsedMessage.print();
-				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
-				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
 						&& parsedMessage.getXid() == this.xid ){
-					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
+					byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
 					long deltat = toUnsigned(buf3.getInt());
 					this.leaseTime = startTime.plusSeconds(deltat);
-					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
 					if (t1 == null){
 						this.renewalTime = startTime.plusSeconds(20);
 						//this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
@@ -136,7 +136,7 @@ public class DHCPClient {
 						this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
 					}
 					
-					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
+					byte[] t2 = parsedOptions.get(DHCPOption.REBINDINGTIME);
 					if (t2==null){
 						this.rebindingTime = startTime.plusSeconds((long)(0.875*deltat));
 					}
@@ -236,16 +236,16 @@ public class DHCPClient {
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
 				System.out.println("PARSED RECEIVED MESSAGE:");
 				parsedMessage.print();
-				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
-				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
 						&& parsedMessage.getXid() == this.xid ){
-					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
+					byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
 					long deltat = toUnsigned(buf3.getInt());
 					System.out.println(deltat);
 					this.leaseTime = startTime.plusSeconds(deltat);
-					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
 					if (t1 == null){
 						System.out.println();
 						this.renewalTime = startTime.plusSeconds((long) (0.5*deltat));
@@ -254,7 +254,7 @@ public class DHCPClient {
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
 						this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
 					}
-					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
+					byte[] t2 = parsedOptions.get(DHCPOption.REBINDINGTIME);
 					if (t2 == null){
 						this.renewalTime = startTime.plusSeconds((long) (0.875*deltat));
 					}
@@ -304,15 +304,15 @@ public class DHCPClient {
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
 				System.out.println("PARSED RECEIVED MESSAGE:");
 				parsedMessage.print();
-				Map<DHCPOptions, byte[]> parsedOptions = parsedMessage.getOptionsMap();
-				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
+				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
 						&& parsedMessage.getXid() == this.xid ){
-					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
+					byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
 					long deltat = toUnsigned(buf3.getInt());
 					this.leaseTime = startTime.plusSeconds(deltat);
-					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
 					if (t1 == null){
 						this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
 					}
@@ -320,7 +320,7 @@ public class DHCPClient {
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
 						this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
 					}
-					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
+					byte[] t2 = parsedOptions.get(DHCPOption.REBINDINGTIME);
 					if (t2 == null){
 						this.rebindingTime = startTime.plusSeconds((long)(0.875*deltat));
 					}

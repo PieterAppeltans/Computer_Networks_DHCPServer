@@ -3,7 +3,7 @@ import java.util.Map;
 
 public class DHCPRelease extends DHCPMessage{
 
-	public DHCPRelease(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOptions,byte[]> options) {
+	public DHCPRelease(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOption,byte[]> options) {
 		
 		super(DHCPOpcode.BOOTREQUEST, // opcode
 			  DHCPHtype.ETHERNET, // htype
@@ -19,9 +19,9 @@ public class DHCPRelease extends DHCPMessage{
 			  );
 	}
 	
-	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
-		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
-		options.put(DHCPOptions.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPRELEASE.getByte()});
+	public static Map<DHCPOption,byte[]> getDefaultOptions(){
+		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
+		options.put(DHCPOption.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPRELEASE.getByte()});
 		return options;
 	}
 	

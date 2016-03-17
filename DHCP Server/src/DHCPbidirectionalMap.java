@@ -14,15 +14,15 @@ public class DHCPbidirectionalMap {
 		HtypeMap.add(DHCPHtype.IEE802,DHCPHtype.IEE802.getByte());
 	}
 	
-	public static BidirectionalMap<DHCPOptions, Byte> OptionsMap = new BidirectionalMap<DHCPOptions, Byte>();
+	public static BidirectionalMap<DHCPOption, Byte> OptionsMap = new BidirectionalMap<DHCPOption, Byte>();
 	
 	static{
-		OptionsMap.add(DHCPOptions.DHCPMESSAGETYPE, DHCPOptions.DHCPMESSAGETYPE.getByte());
-		OptionsMap.add(DHCPOptions.IPADDRESSLEASETIME, DHCPOptions.IPADDRESSLEASETIME.getByte());
-		OptionsMap.add(DHCPOptions.REQUESTEDIPADDRESS,DHCPOptions.REQUESTEDIPADDRESS.getByte());
-		OptionsMap.add(DHCPOptions.REBINDINGTIME, DHCPOptions.REBINDINGTIME.getByte());
-		OptionsMap.add(DHCPOptions.RENEWALTIME, DHCPOptions.RENEWALTIME.getByte());
-		OptionsMap.add(DHCPOptions.SERVERIDENTIFIER, DHCPOptions.SERVERIDENTIFIER.getByte());
+		OptionsMap.add(DHCPOption.DHCPMESSAGETYPE, DHCPOption.DHCPMESSAGETYPE.getByte());
+		OptionsMap.add(DHCPOption.IPADDRESSLEASETIME, DHCPOption.IPADDRESSLEASETIME.getByte());
+		OptionsMap.add(DHCPOption.REQUESTEDIPADDRESS,DHCPOption.REQUESTEDIPADDRESS.getByte());
+		OptionsMap.add(DHCPOption.REBINDINGTIME, DHCPOption.REBINDINGTIME.getByte());
+		OptionsMap.add(DHCPOption.RENEWALTIME, DHCPOption.RENEWALTIME.getByte());
+		OptionsMap.add(DHCPOption.SERVERIDENTIFIER, DHCPOption.SERVERIDENTIFIER.getByte());
 	}
 	
 	public static BidirectionalMap<DHCPMessageType, Byte> MessageTypeMap = new BidirectionalMap<DHCPMessageType, Byte>();

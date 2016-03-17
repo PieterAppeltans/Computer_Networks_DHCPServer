@@ -7,17 +7,18 @@ public class UDPServerThread implements Runnable {
 
 	private DatagramSocket serverSocket = null;
     private DatagramPacket receivePacket = null;
-
-    public UDPServerThread(DatagramSocket socket, DatagramPacket packet) {
+    private DHCPServer server;
+    public UDPServerThread(DatagramSocket socket, DatagramPacket packet,DHCPServer server) {
         this.serverSocket = socket;
         this.receivePacket = packet;
+        this.server = server;
     }
 
     public void run() {
     	System.out.println(Thread.currentThread().getName() + " started");
     	InetAddress IPAddress = receivePacket.getAddress(); 
 		int port = receivePacket.getPort();
-		byte[] sendData = receivePacket.getData();
+		byte[] sendData = DHCPServer;
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 		try {
 			serverSocket.send(sendPacket);

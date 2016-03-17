@@ -29,8 +29,8 @@ public class MessageParser {
 		buf.position(buf.position()+64+128);
 		byte[] options = new byte[optionLength];
 		buf.get(options);
-		Map<DHCPOptions,byte[]> parsedOptions  = MessageParser.parseOptions(options);
-		byte[] OptionOverload = parsedOptions.get(DHCPOptions.OPTIONOVERLOAD);
+		Map<DHCPOption,byte[]> parsedOptions  = MessageParser.parseOptions(options);
+		byte[] OptionOverload = parsedOptions.get(DHCPOption.OPTIONOVERLOAD);
 		if (OptionOverload != null){
 			if ((int)OptionOverload[0]%2 == 1){
 				byte[] file = new byte[128];
@@ -45,18 +45,18 @@ public class MessageParser {
 				parsedOptions.putAll(MessageParser.parseOptions(sname,false));
 			}
 		}
-		byte messageType = MessageParser.parseOptions(options).get(DHCPOptions.DHCPMESSAGETYPE)[0];
+		byte messageType = MessageParser.parseOptions(options).get(DHCPOption.DHCPMESSAGETYPE)[0];
 		System.out.println(DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType));
 		return new DHCPMessage(DHCPbidirectionalMap.OpcodeMap.getBackward(opcode),DHCPbidirectionalMap.HtypeMap.getBackward(htype),xid,secs,(boolean) flag,ciaddr,yiaddr,siaddr,giaddr,chaddr,parsedOptions);
 	}
 	
-	public static Map<DHCPOptions,byte[]> parseOptions(byte[] options){
+	public static Map<DHCPOption,byte[]> parseOptions(byte[] options){
 		return MessageParser.parseOptions(options,true);
 	}
 	
-	public static Map<DHCPOptions,byte[]> parseOptions(byte[] options,boolean magicCookieNeeded){
+	public static Map<DHCPOption,byte[]> parseOptions(byte[] options,boolean magicCookieNeeded){
 		ByteBuffer buf = ByteBuffer.wrap(options);
-		Map<DHCPOptions,byte[]> result = new HashMap<DHCPOptions, byte[]>();
+		Map<DHCPOption,byte[]> result = new HashMap<DHCPOption, byte[]>();
 		if (magicCookieNeeded){
 			byte[] magicCookie = new byte[4];
 			buf.get(magicCookie);
