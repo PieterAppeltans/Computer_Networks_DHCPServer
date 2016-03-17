@@ -6,8 +6,8 @@ public class Test {
 
 		// Test sending bytes to UDPServer
 		
-		DHCPClient client = new DHCPClient(InetAddress.getByName("localhost"),9876);
-		client.init();
+		DHCPClient client = new DHCPClient(InetAddress.getByName("10.33.14.246"),1234);
+		client.run();
 		
 	}
 	
