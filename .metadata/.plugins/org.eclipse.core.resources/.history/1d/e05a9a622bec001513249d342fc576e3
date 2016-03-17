@@ -133,7 +133,7 @@ public class DHCPClient {
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
 						this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
 					}
-					
+					System.out.println("Renal Time: " + this.renewalTime.toString());
 					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
 					if (t2==null){
 						this.rebindingTime = startTime.plusSeconds((long)0.875*deltat);
@@ -335,7 +335,6 @@ public class DHCPClient {
 	
 	public void run(){
 		while (true){
-			System.out.println("Renal Time: " + this.renewalTime.toString());
 			if (this.state == DHCPClientStates.INIT){ // already gets checked within init()?
 				this.init();
 				this.request();
