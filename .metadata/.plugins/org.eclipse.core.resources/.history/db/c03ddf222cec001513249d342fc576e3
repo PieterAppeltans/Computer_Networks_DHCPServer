@@ -127,7 +127,7 @@ public class DHCPClient {
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					if (t1 == null){
-						this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
+						this.renewalTime = startTime.plusSeconds((long)0.5*deltat);
 					}
 					else{
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
@@ -136,7 +136,7 @@ public class DHCPClient {
 					
 					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
 					if (t2==null){
-						this.rebindingTime = startTime.plusSeconds((long)(0.875*deltat));
+						this.rebindingTime = startTime.plusSeconds((long)0.875*deltat);
 					}
 					else{
 						ByteBuffer buf2 = ByteBuffer.wrap(t2);
@@ -240,8 +240,7 @@ public class DHCPClient {
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					if (t1 == null){
-						System.out.println();
-						this.renewalTime = startTime.plusSeconds((long) (0.5*deltat));
+						this.renewalTime = startTime.plusSeconds((long) 0.5*deltat);
 					}
 					else{
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
@@ -249,7 +248,7 @@ public class DHCPClient {
 					}
 					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
 					if (t2 == null){
-						this.renewalTime = startTime.plusSeconds((long) (0.875*deltat));
+						this.renewalTime = startTime.plusSeconds((long) 0.875*deltat);
 					}
 					else{
 						ByteBuffer buf2 = ByteBuffer.wrap(t2);
