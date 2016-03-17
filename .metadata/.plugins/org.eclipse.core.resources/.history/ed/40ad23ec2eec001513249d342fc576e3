@@ -19,7 +19,7 @@ public class DHCPRelease extends DHCPMessage{
 			  );
 	}
 	
-	public static Map<DHCPOptions,byte[]> getDefaultOptions(){
+	public static Map<DHCPOptions,byte[]> getOptions(){
 		Map<DHCPOptions,byte[]> options = new HashMap<DHCPOptions,byte[]>();
 		options.put(DHCPOptions.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPRELEASE.getByte()});
 		return options;

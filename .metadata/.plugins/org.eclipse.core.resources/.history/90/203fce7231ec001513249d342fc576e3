@@ -363,7 +363,6 @@ public class DHCPClient {
 	}
 	
 	public byte[] getChaddr(){
-		
 		try{
 			InetAddress ip = InetAddress.getLocalHost();
 			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
@@ -377,9 +376,7 @@ public class DHCPClient {
 			return chaddr;
 		}
 		catch (Exception e){
-			Random rand = new Random();
-			byte[] mac = new byte[6]; // random fixed mac address
-			rand.nextBytes(mac);
+			byte[] mac = new byte[] {(byte)0xa1,(byte)0xf3,(byte)0xe2,(byte)0x43,(byte)0x13,(byte)0X78}; // random fixed mac address
 			byte[] chaddr = new byte[16];
 			byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,
 				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
