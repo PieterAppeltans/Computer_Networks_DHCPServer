@@ -335,13 +335,12 @@ public class DHCPClient {
 	
 	public void run(){
 		while (true){
-			
+			System.out.println("Renal Time: " + this.renewalTime.toString());
 			if (this.state == DHCPClientStates.INIT){ // already gets checked within init()?
 				this.init();
 				this.request();
 			} 
 			else {
-				System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
 					this.renew();
 				}		
