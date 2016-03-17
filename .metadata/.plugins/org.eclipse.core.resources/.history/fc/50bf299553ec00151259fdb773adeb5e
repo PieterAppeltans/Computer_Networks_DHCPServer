@@ -1,6 +1,3 @@
-/**
- * An enumeration storing the different DHCPMessageType with their byte value.
- */
 public enum DHCPMessageType {
 	
 	  DHCPDISCOVER{
@@ -45,10 +42,7 @@ public enum DHCPMessageType {
 			return 8;
 		}  	  
       };
-      /**
-       * Method that returns the byte associated with each message type
-       * @return The byte associated with the given message type.
-       */
+	
       public abstract byte getByte();
       
 }

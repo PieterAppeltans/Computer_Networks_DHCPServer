@@ -372,8 +372,8 @@ public class DHCPClient {
 			else {
 				//System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					this.renew();
-					//this.release();
+					//this.renew();
+					this.release();
 				}		
 			}
 		}

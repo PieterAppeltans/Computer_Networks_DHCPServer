@@ -39,7 +39,7 @@ public class DHCPServerThread implements Runnable {
 		Map<DHCPOption,byte[]>options = message.getOptionsMap();
 		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
-		int leaseTime;
+		
 		if ((IP == null) || !(addressKeeper.inRange(IP) && !addressKeeper.inUse(IP)) ){
 			IP = addressKeeper.generateNewInetAddress(message.getChaddr()).getAddress();
 		}
@@ -48,7 +48,7 @@ public class DHCPServerThread implements Runnable {
 		}
 		else{
 			ByteBuffer buf = ByteBuffer.wrap(t);
-			leaseTime = buf.getInt();
+			int leaseTime = buf.getInt();
 			if (leaseTime < addressKeeper.getMinLeaseTime()){
 				leaseTime = addressKeeper.getMinLeaseTime();
 			}

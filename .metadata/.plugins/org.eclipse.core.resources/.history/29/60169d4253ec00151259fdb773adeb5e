@@ -24,18 +24,9 @@ public class DHCPClient {
 	private byte[] offeredAddress;
 	private byte[] receivedAddress;
 	private int xid;
-	/**
-	 * Storing the time at which the client must tries to extend its lease (cfr. RENEWING STATE)
-	 */
+
 	private LocalDateTime renewalTime;
-	/**
-	 * Storing the time at which the client must tries to extend its lease, but instead of unicasting the
-	 * request message to its last known server, it must broadcast it.
-	 */
 	private LocalDateTime rebindingTime;
-	/**
-	 * Storing the time at which the clients lease ends
-	 */
 	private LocalDateTime leaseTime;
 	
 
@@ -372,8 +363,8 @@ public class DHCPClient {
 			else {
 				//System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					this.renew();
-					//this.release();
+					//this.renew();
+					this.release();
 				}		
 			}
 		}

@@ -39,24 +39,20 @@ public class DHCPServerThread implements Runnable {
 		Map<DHCPOption,byte[]>options = message.getOptionsMap();
 		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
-		int leaseTime;
+		ByteBuffer buf = ByteBuffer.wrap(t);
+		int leaseTime = buf.getInt();
 		if ((IP == null) || !(addressKeeper.inRange(IP) && !addressKeeper.inUse(IP)) ){
 			IP = addressKeeper.generateNewInetAddress(message.getChaddr()).getAddress();
 		}
-		if (t == null){
+		if (leaseTime == 0){
 			leaseTime = addressKeeper.getDefaultLeaseTime();
 		}
-		else{
-			ByteBuffer buf = ByteBuffer.wrap(t);
-			leaseTime = buf.getInt();
-			if (leaseTime < addressKeeper.getMinLeaseTime()){
-				leaseTime = addressKeeper.getMinLeaseTime();
-			}
-			else if (leaseTime > addressKeeper.getMaxLeaseTime()){
-				leaseTime = addressKeeper.getMaxLeaseTime();
-			}
+		else if (leaseTime < addressKeeper.getMinLeaseTime()){
+			leaseTime = addressKeeper.getMinLeaseTime();
 		}
-		
+		else if (leaseTime > addressKeeper.getMaxLeaseTime()){
+			leaseTime = addressKeeper.getMaxLeaseTime();
+		}
 		return new DHCPOffer(message.getXid(), IP, this.serverAddress,message.getChaddr() , DHCPOffer.getDefaultOptions(leaseTime, this.serverAddress));
 	}
 	/**
