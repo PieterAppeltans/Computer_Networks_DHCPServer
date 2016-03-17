@@ -1,0 +1,8 @@
+import java.net.InetAddress;
+import java.util.*;
+
+
+public class DHCPServer {
+	private Map<InetAddress,Map<String,Object>> leasedIP = new HashMap();
+	private void addNewLease(InetAddress ipaddress, byte[] clientIdentifier){}
+}

@@ -19,7 +19,6 @@ public class DHCPClient {
 	private int xid;
 	private LocalDateTime renewingTime;
 	private LocalDateTime reboundingTime;
-	private LocalDateTime leaseTime;
 	public void init() {
 		int timeout = 0; 
 		Random rand = new Random();
@@ -109,15 +108,11 @@ public class DHCPClient {
 					byte[] t2 = parsedOptions.get(DHCPOptions.REBINGINGTIME);
 					ByteBuffer buf2 = ByteBuffer.wrap(t2);
 					this.reboundingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
-					byte[] leaseTime = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
-					ByteBuffer buf3 = ByteBuffer.wrap(leaseTime);
-					this.leaseTime =  startTime.plusSeconds(toUnsigned(buf3.getInt()));
 					this.state = DHCPClientStates.BOUND;
 					
 				}
 				else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
 						&& parsedMessage.getXid() == this.xid ){
-					ErrorPrinter.print("Returing to INIT state");
 					this.state = DHCPClientStates.INIT;
 				}
 				else{ // if the client receives neither a DHCPACK or a DHCPNAK message.  The client retransmits the DHCPREQUEST
@@ -154,13 +149,20 @@ public class DHCPClient {
 		}
 	}
 	private void bound(){
-		
+		//Thread.sleep((LocalDateTime.now().minus(this.renewingTime.)).millis());
 	}
 	private void renew(){
-		
+		int timeout = 0;
+		Random rand = new Random();
+		while (this.state == DHCPClientStates.RENEWING){
+			if (timeout != 0){				
+				try{
+					Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
+				}
+				catch(Exception e){}
+			}
+		}
 	}
-	private void rebind(){}
-	private void release(){}
 	private long toUnsigned(int signed){
 		if (signed<0){
 			return (long) Math.abs(signed) + (long) Math.pow(2,31);

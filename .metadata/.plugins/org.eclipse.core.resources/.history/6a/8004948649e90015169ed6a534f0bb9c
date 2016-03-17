@@ -117,7 +117,6 @@ public class DHCPClient {
 				}
 				else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
 						&& parsedMessage.getXid() == this.xid ){
-					ErrorPrinter.print("Returing to INIT state");
 					this.state = DHCPClientStates.INIT;
 				}
 				else{ // if the client receives neither a DHCPACK or a DHCPNAK message.  The client retransmits the DHCPREQUEST
