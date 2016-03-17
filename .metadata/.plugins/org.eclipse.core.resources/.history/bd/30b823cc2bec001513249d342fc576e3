@@ -236,7 +236,6 @@ public class DHCPClient {
 					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
 					long deltat = toUnsigned(buf3.getInt());
-					System.out.println(deltat);
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					if (t1 == null){
