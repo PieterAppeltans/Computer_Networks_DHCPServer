@@ -127,8 +127,7 @@ public class DHCPClient {
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					if (t1 == null){
-						this.renewalTime = startTime.plusSeconds(20);
-						//this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
+						this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
 					}
 					else{
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
@@ -191,18 +190,13 @@ public class DHCPClient {
 	}
 	
 	public void release(){
-		if (this.state == DHCPClientStates.BOUND){	
-			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getDefaultOptions());
-			message.print();
+		if (this.state == DHCPClientStates.BOUND){
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getOptions());
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage()); // Does the server return anything at all?
 			}	
 			catch (Exception e){
-			}
-			if (returnMessage != null){
-				DHCPMessage mess = MessageParser.parseMessage(returnMessage,312);
-				mess.print();
 			}
 		}
 	}
@@ -362,15 +356,13 @@ public class DHCPClient {
 			else {
 				//System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					//this.renew();
-					this.release();
+					this.renew();
 				}		
 			}
 		}
 	}
 	
 	public byte[] getChaddr(){
-		
 		try{
 			InetAddress ip = InetAddress.getLocalHost();
 			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
@@ -384,9 +376,7 @@ public class DHCPClient {
 			return chaddr;
 		}
 		catch (Exception e){
-			Random rand = new Random();
-			byte[] mac = new byte[6]; // random fixed mac address
-			rand.nextBytes(mac);
+			byte[] mac = new byte[] {(byte)0xa1,(byte)0xf3,(byte)0xe2,(byte)0x43,(byte)0x13,(byte)0X78}; // random fixed mac address
 			byte[] chaddr = new byte[16];
 			byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,
 				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
