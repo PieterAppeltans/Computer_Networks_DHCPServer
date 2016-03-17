@@ -1,7 +1,7 @@
 public class RunUDPServer {
 	
 	public static void main(String[] args) throws Exception {
-		UDPServer server = new UDPServer(9876);
+		DHCPServer server = new DHCPServer("options.txt");
 		server.run();
 	}
 	

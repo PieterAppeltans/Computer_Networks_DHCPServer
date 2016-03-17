@@ -1,119 +1,79 @@
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import java.time.LocalDateTime;
-import java.util.*;
-
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 public class DHCPServer {
-	public DHCPServer(String string){
+	
+	public DHCPServer(String configurationAddress){
+		try{
+			this.processConfigurationFile(configurationAddress);
+		}
+		catch (IOException e){
+			ErrorPrinter.print("Configuration File not found");
+		}
+		
 		
 	}
-	private byte[] start;
-	private byte[] end;
-	private byte[] mask;
-	private int defaultLeaseTime;
-	private int maxLeaseTime;
-	private int minLeaseTime;
-	private byte[] serverIP;
-	private Map<InetAddress,Object[]> leasedIP = new Hashtable<InetAddress, Object[]>();
-	private Map<InetAddress,Object[]> offeredIP = new Hashtable<InetAddress,Object[]>();
-	/**
-	 * A method that generate a new InetAddress based on the client identifier
-	 * @param clientIdentifier Unique client identifier, used to try to give the same client the same InetAddress if available
-	 * @return
-	 */
-	private InetAddress generateNewInetAddress (byte[] clientIdentifier){
-		return null;
+	public DHCPServer(int port,byte[] start,byte[] end, byte[] mask,int defaultLeaseTime,int maxLeaseTime,int minLeaseTime){
+		this.port = port;
+		this.addressKeeper = new IPAddressKeeper(start, end, mask, defaultLeaseTime, maxLeaseTime, minLeaseTime);
+	} 
+	// TODO Finish reading from configuration file.
+	// File format
+	// PORT:23532
+	// START:0.0.12.12
+	// END:0.0.16.12
+	// MASK:14.12.0.0
+	// DEFAULTLEASETIME:2423
+	// MAXLEASETIME:23524
+	// MINLEASETIME:2123
+	private void processConfigurationFile(String configurationAddress) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(configurationAddress));
+		Map<String,String> options = new HashMap<String,String>();
+		try {
+		    String line = br.readLine();
+		    while (line != null) {
+		    	String[] parsedLine =  line.split(":");
+		    	options.put(parsedLine[0], parsedLine[1]);
+		    	line = br.readLine();
+		    }
+		}
+		finally {
+		    br.close();
+		}
+		this.port = Integer.parseInt(options.get("PORT"));
+		
 	}
-	/**
-	 * 
-	 * @return
-	 */
-	private boolean inRange(byte[] ipaddr){
-		return false;
-	}
-	private boolean inUse(byte[] ipaddr){
-		return false;
-	}
-	/**
-	 * Adding a new lease to the map leasedIP
-	 * @param ipaddress The address which is leased
-	 * @param clientIdentifier A unique client identifier
-	 * @param endOfLease Time at which lease expires
-	 */
-	private void addNewLease(InetAddress ipaddress, byte[] clientIdentifier,int endOfLease){
-		leasedIP.put(ipaddress,new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)endOfLease)});
-	}
-	private void removeLease(InetAddress toBeRemoved){
-		leasedIP.remove(toBeRemoved);
-	}
-	/**
-	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
-	 */
-	private void removeExpiredLeases(){
-		// TODO check if all keys are checked
-		for (InetAddress key : leasedIP.keySet()) {
-			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
-			if (endOfLease.isBefore(LocalDateTime.now())){
-				removeLease(key);
-			}
+
+	public void run() throws Exception{
+		ExecutorService executor = Executors.newFixedThreadPool(5);
+		DatagramSocket serverSocket = new DatagramSocket(this.port);
+		byte[] receiveData = new byte[this.bufferSize];
+		while(true){                   
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			serverSocket.receive(receivePacket);
+			//System.out.println("RECEIVED FROM CLIENT:\t" + DHCPMessage.printByteArrayHexa(receiveData));
+			Runnable thread = new DHCPServerThread(serverSocket,receivePacket,this.addressKeeper,InetAddress.getByName("localhost").getAddress());
+			executor.execute(thread);
 		}
 	}
-	/**
-	 * Returning a DHCPOffer given the received DHCPDiscoverMessage.
-	 * @param message the received DHCPDiscoverMessage that is used to make the offer
-	 * @return
-	 */
-	private DHCPOffer processDiscover(DHCPMessage message){
-		Map<DHCPOption,byte[]>options = message.getOptionsMap();
-		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
-		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
-		ByteBuffer buf = ByteBuffer.wrap(t);
-		int leaseTime = buf.getInt();
-		if ((IP == null) || !(inRange(IP) && !inUse(IP)) ){
-			IP = generateNewInetAddress(message.getChaddr()).getAddress();
-		}
-		if (leaseTime == 0){
-			leaseTime = defaultLeaseTime;
-		}
-		else if (leaseTime < minLeaseTime){
-			leaseTime =minLeaseTime;
-		}
-		else if (leaseTime > maxLeaseTime){
-			leaseTime = maxLeaseTime;
-		}
-		return new DHCPOffer(message.getXid(), IP, this.serverIP,message.getChaddr() , DHCPOffer.getDefaultOptions(leaseTime, this.serverIP));
+	
+	public int getBufferSize(){
+		return this.bufferSize;
 	}
-	/**
-	 * 
-	 * @param message
-	 * @return
-	 */
-	private DHCPAck processRequest(DHCPMessage message){
-		return null;
+	
+	public void setBufferSize(int buffersize){
+		this.bufferSize = buffersize;
 	}
-	private void processRelease(DHCPMessage message){}
-	/**
-	 * 
-	 * @return
-	 */
-	public DHCPMessage answerMessage(byte[] receivedMessage){
-		removeExpiredLeases();
-		DHCPMessage parsedMessage = MessageParser.parseMessage(receivedMessage, 312);
-		Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
-		byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
-		if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPDISCOVER ){
-			return processDiscover(parsedMessage);
-		}
-		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPREQUEST ){
-			return processRequest(parsedMessage);
-		}
-		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPRELEASE ){
-			processRelease(parsedMessage);
-			return null;
-		}
-		else{
-			return null;
-		}
-	}
+	private IPAddressKeeper addressKeeper;
+	private int bufferSize = 576;
+	private int port;
+	
 }

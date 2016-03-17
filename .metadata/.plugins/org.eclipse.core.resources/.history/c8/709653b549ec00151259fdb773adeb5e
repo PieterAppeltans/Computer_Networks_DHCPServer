@@ -1,0 +1,8 @@
+public class RunUDPServer {
+	
+	public static void main(String[] args) throws Exception {
+		DHCPServer server = new DHCPServer(9876);
+		server.run();
+	}
+	
+}
