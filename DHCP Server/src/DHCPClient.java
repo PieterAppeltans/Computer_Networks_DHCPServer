@@ -298,7 +298,7 @@ public class DHCPClient {
 	}
 	private long toUnsigned(int signed){
 		if (signed<0){
-			return (long) (2**31 - Math.abs(signed)) + (long) Math.pow(2,31);
+			return (long) (Math.pow(2,31) - Math.abs(signed)) + (long) Math.pow(2,31);
 		}
 		else{
 			return signed;
@@ -314,9 +314,6 @@ public class DHCPClient {
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
 					this.renew();
 				}		
-			}
-			else if (this.state == DHCPClientStates.REQUESTING){
-				this.request();
 			}
 		}
 	}
