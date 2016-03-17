@@ -35,7 +35,7 @@ public class DHCPRequest extends DHCPMessage {
 		if (requestedLeaseTime != 0){
 			ByteBuffer b = ByteBuffer.allocate(4);
 			b.putInt(requestedLeaseTime);
-			options.put(DHCPOptions.IPADDRESSLEASETIME, b.array());
+			options.put(DHCPOptions.IPADDRESSLEASETIME, b.array()));
 		}
 		return options;
 	}
