@@ -15,7 +15,7 @@ public class DHCPClient {
 	public DHCPClient(InetAddress DHCPServerAdrress,int port){
 		udpclient = new UDPClient(DHCPServerAdrress,port);
 		state = DHCPClientStates.INIT;
-		chaddr = getChaddr();
+		chaddr = chaddr;
 	}
 	
 	private UDPClient udpclient;
