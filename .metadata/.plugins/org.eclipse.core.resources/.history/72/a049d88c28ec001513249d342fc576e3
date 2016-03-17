@@ -100,7 +100,7 @@ public class DHCPMessage {
 		
 		// print the byte array
 		//System.out.println("MESSAGE UNSIGNED INT:\t" + printByteArrayInt(result));
-		//System.out.println("MESSAGE HEXADECIMAL:\t" + printByteArrayHexa(result));
+		System.out.println("MESSAGE HEXADECIMAL:\t" + printByteArrayHexa(result));
 		
 		return result;
 	}

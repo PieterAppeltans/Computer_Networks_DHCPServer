@@ -50,9 +50,6 @@ public class DHCPClient {
 			}
 			this.xid = rand.nextInt();
 			DHCPMessage message = new DHCPDiscover(xid,this.getChaddr(),DHCPDiscover.getDefaultOptions());
-			System.out.println("----------------------------------------------------------------------------");
-			System.out.println("Sending Discover message");
-			message.print();
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage());
@@ -103,9 +100,6 @@ public class DHCPClient {
 				catch(Exception e){}
 			}
 			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier));
-			System.out.println("----------------------------------------------------------------------------");
-			System.out.println("Sending Request message");
-			message.print();
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -121,25 +115,16 @@ public class DHCPClient {
 				byte[] messageType = parsedOptions.get(DHCPOptions.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
 						&& parsedMessage.getXid() == this.xid ){
+					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
+					ByteBuffer buf1 = ByteBuffer.wrap(t1);
+					this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
+					ByteBuffer buf2 = ByteBuffer.wrap(t2);
+
+					this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
 					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
 					this.leaseTime = startTime.plusSeconds(toUnsigned(buf3.getInt()));
-					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
-					if (t1 == null){
-						this.renewalTime = startTime.plusSeconds((long)0.5*toUnsigned(buf3.getInt()));
-					}
-					else{
-						ByteBuffer buf1 = ByteBuffer.wrap(t1);
-						this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
-					}
-					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
-					if (t2==null){
-						this.rebindingTime = startTime.plusSeconds((long)0.875*toUnsigned(buf3.getInt()));
-					}
-					else{
-						ByteBuffer buf2 = ByteBuffer.wrap(t2);
-						this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
-					}
 					this.state = DHCPClientStates.BOUND;
 					this.receivedAddress = parsedMessage.getYiaddr();
 					System.out.println("TO BOUND STATE");

@@ -50,9 +50,6 @@ public class DHCPClient {
 			}
 			this.xid = rand.nextInt();
 			DHCPMessage message = new DHCPDiscover(xid,this.getChaddr(),DHCPDiscover.getDefaultOptions());
-			System.out.println("----------------------------------------------------------------------------");
-			System.out.println("Sending Discover message");
-			message.print();
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage());
@@ -103,9 +100,6 @@ public class DHCPClient {
 				catch(Exception e){}
 			}
 			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.getChaddr(),DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier));
-			System.out.println("----------------------------------------------------------------------------");
-			System.out.println("Sending Request message");
-			message.print();
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
