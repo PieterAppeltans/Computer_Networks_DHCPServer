@@ -123,11 +123,10 @@ public class DHCPClient {
 						&& parsedMessage.getXid() == this.xid ){
 					byte[] t3 = parsedOptions.get(DHCPOptions.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
-					long deltat = toUnsigned(buf3.getInt());
-					this.leaseTime = startTime.plusSeconds(deltat);
+					this.leaseTime = startTime.plusSeconds(toUnsigned(buf3.getInt()));
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					if (t1 == null){
-						this.renewalTime = startTime.plusSeconds((long)0.5*deltat);
+						this.renewalTime = startTime.plusSeconds((long)0.5*toUnsigned(buf3.getInt()));
 					}
 					else{
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
@@ -135,7 +134,7 @@ public class DHCPClient {
 					}
 					byte[] t2 = parsedOptions.get(DHCPOptions.REBINDINGTIME);
 					if (t2==null){
-						this.rebindingTime = startTime.plusSeconds((long)0.875*deltat);
+						this.rebindingTime = startTime.plusSeconds((long)0.875*toUnsigned(buf3.getInt()));
 					}
 					else{
 						ByteBuffer buf2 = ByteBuffer.wrap(t2);
