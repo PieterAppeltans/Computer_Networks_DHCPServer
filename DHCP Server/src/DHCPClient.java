@@ -127,7 +127,8 @@ public class DHCPClient {
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOptions.RENEWALTIME);
 					if (t1 == null){
-						this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
+						this.renewalTime = startTime.plusSeconds(20);
+						//this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
 					}
 					else{
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
@@ -192,11 +193,16 @@ public class DHCPClient {
 	public void release(){
 		if (this.state == DHCPClientStates.BOUND){
 			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getOptions());
+			message.print();
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage()); // Does the server return anything at all?
 			}	
 			catch (Exception e){
+			}
+			if (returnMessage != null){
+				DHCPMessage mess = MessageParser.parseMessage(returnMessage,312);
+				mess.print();
 			}
 		}
 	}
@@ -356,7 +362,8 @@ public class DHCPClient {
 			else {
 				//System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					this.renew();
+					//this.renew();
+					this.release();
 				}		
 			}
 		}
