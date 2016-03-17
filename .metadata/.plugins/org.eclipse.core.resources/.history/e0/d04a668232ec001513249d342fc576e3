@@ -192,9 +192,14 @@ public class DHCPClient {
 	}
 	
 	public void release(){
+<<<<<<< HEAD
+		if (this.state == DHCPClientStates.BOUND){
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.chaddr,DHCPRelease.getDefaultOptions());
+=======
 		if (this.state == DHCPClientStates.BOUND){	
 			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getDefaultOptions());
 			message.print();
+>>>>>>> 15c4243e7562388ce0979bb1772112a608c254c9
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage()); // Does the server return anything at all?
