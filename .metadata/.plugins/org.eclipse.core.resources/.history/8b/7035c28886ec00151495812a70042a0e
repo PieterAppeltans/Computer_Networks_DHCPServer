@@ -1,0 +1,94 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.Map;
+
+public class DHCPServerThread implements Runnable {
+
+	private DatagramSocket serverSocket;
+    private DatagramPacket receivePacket;
+    private IPAddressKeeper addressKeeper;
+    private byte[] serverAddress;
+    public DHCPServerThread(DatagramSocket socket, DatagramPacket packet,IPAddressKeeper addresskeeper,byte[] serverAddress) {
+        this.serverSocket = socket;
+        this.receivePacket = packet;
+        this.addressKeeper = addresskeeper;
+        this.serverAddress = serverAddress;
+    }
+
+    public void run() {
+    	System.out.println(Thread.currentThread().getName() + " started");
+    	InetAddress IPAddress = receivePacket.getAddress(); 
+		int port = receivePacket.getPort();
+		byte[] sendData = this.answerMessage(receivePacket.getData());
+		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+		try {
+			serverSocket.send(sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    /**
+	 * Returning a DHCPOffer given the received DHCPDiscoverMessage.
+	 * @param message the received DHCPDiscoverMessage that is used to make the offer
+	 * @return
+	 */
+	private DHCPOffer processDiscover(DHCPMessage message){
+		Map<DHCPOption,byte[]>options = message.getOptionsMap();
+		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
+		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
+		int leaseTime;
+		if ((IP == null) || !(addressKeeper.inRange(IP) && !addressKeeper.inUse(IP)) ){
+			IP = addressKeeper.generateNewInetAddress(message.getChaddr()).getAddress();
+		}
+		if (t == null){
+			leaseTime = addressKeeper.getDefaultLeaseTime();
+		}
+		else{
+			ByteBuffer buf = ByteBuffer.wrap(t);
+			leaseTime = buf.getInt();
+			if (leaseTime < addressKeeper.getMinLeaseTime()){
+				leaseTime = addressKeeper.getMinLeaseTime();
+			}
+			else if (leaseTime > addressKeeper.getMaxLeaseTime()){
+				leaseTime = addressKeeper.getMaxLeaseTime();
+			}
+		}
+		
+		return new DHCPOffer(message.getXid(), IP, this.serverAddress,message.getChaddr() , DHCPOffer.getDefaultOptions(leaseTime, this.serverAddress));
+	}
+	/**
+	 * 
+	 * @param message
+	 * @return
+	 */
+	private DHCPAck processRequest(DHCPMessage message){
+		return null;
+	}
+	private void processRelease(DHCPMessage message){}
+	/**
+	 * 
+	 * @return
+	 */
+	public byte[] answerMessage(byte[] receivedMessage){
+		addressKeeper.removeExpiredLeases();
+		DHCPMessage parsedMessage = MessageParser.parseMessage(receivedMessage, 312);
+		Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+		byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+		if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPDISCOVER ){
+			return processDiscover(parsedMessage).generateMessage();
+		}
+		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPREQUEST ){
+			return processRequest(parsedMessage).generateMessage();
+		}
+		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPRELEASE ){
+			processRelease(parsedMessage);
+			return null;
+		}
+		else{
+			return null;
+		}
+	}
+}

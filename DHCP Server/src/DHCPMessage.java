@@ -147,5 +147,8 @@ public class DHCPMessage {
 		}
 		return builder.toString();
 	}
+	public byte[] getCiaddr() {
+		return this.ciaddr;
+	}
 	
 }

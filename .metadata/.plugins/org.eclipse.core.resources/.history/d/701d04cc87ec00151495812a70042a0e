@@ -1,0 +1,102 @@
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
+import java.util.*;
+
+
+public class IPAddressKeeper {
+	public IPAddressKeeper(byte[] start,byte[] end,byte[] mask,int defaultLeaseTime,int maxLeaseTime,int minLeaseTime){
+		this.start = start;
+		this.end = end;
+		this.mask = mask;
+		this.defaultLeaseTime = defaultLeaseTime;
+		this.maxLeaseTime = maxLeaseTime;
+		this.minLeaseTime = minLeaseTime;
+	}
+	private byte[] start;
+	private byte[] end;
+	private byte[] mask;
+	private int defaultLeaseTime;
+	private int maxLeaseTime;
+	private int minLeaseTime;
+	private Map<InetAddress,Object[]> leasedIP = new Hashtable<InetAddress, Object[]>();
+	private Map<InetAddress,Object[]> offeredIP = new Hashtable<InetAddress,Object[]>();
+	/**
+	 * A method that generate a new InetAddress based on the client identifier
+	 * @param clientIdentifier Unique client identifier, used to try to give the same client the same InetAddress if available
+	 * @return
+	 */
+	public InetAddress generateNewInetAddress (byte[] clientIdentifier){
+		byte[] result = new byte[4];
+		int maxMaskValue = 0;
+		for (int i = 0;i<mask.length;i++){
+			if (mask[i] != 0){
+				maxMaskValue = i;
+			}
+			result[i] = mask[i];
+		}
+		for (int j = maxMaskValue+1;j<mask.length;j++){
+			if (start == end){
+				maxMaskValue = j;
+			}
+			int s = (int) start[j] & 0xff;
+			int e = (int) end[j] & 0xff;
+			int c = (int) clientIdentifier[j] & 0xff;
+			result[j] = (byte) ((e-s)*((double)c/255)+s);
+		}
+		while (inUse(result)){
+			result[]
+		}
+		try {
+			return InetAddress.getByAddress(result);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			return null;
+		}
+	}
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean inRange(byte[] ipaddr){
+		return false;
+	}
+	public boolean inUse(byte[] ipaddr){
+		return false;
+	}
+	/**
+	 * Adding a new lease to the map leasedIP
+	 * @param ipaddress The address which is leased
+	 * @param clientIdentifier A unique client identifier
+	 * @param endOfLease Time at which lease expires
+	 */
+	public void addNewLease(InetAddress ipaddress, byte[] clientIdentifier,int endOfLease){
+		leasedIP.put(ipaddress,new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)endOfLease)});
+	}
+	public void removeLease(InetAddress toBeRemoved){
+		leasedIP.remove(toBeRemoved);
+	}
+	/**
+	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
+	 */
+	public void removeExpiredLeases(){
+		// TODO check if all keys are checked
+		for (InetAddress key : leasedIP.keySet()) {
+			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
+			if (endOfLease.isBefore(LocalDateTime.now())){
+				removeLease(key);
+			}
+		}
+	}
+	public int getDefaultLeaseTime() {
+		return this.defaultLeaseTime;
+	}
+	public int getMinLeaseTime(){
+		return this.minLeaseTime;
+	}
+	public int getMaxLeaseTime(){
+		return this.maxLeaseTime;
+	}
+	
+}

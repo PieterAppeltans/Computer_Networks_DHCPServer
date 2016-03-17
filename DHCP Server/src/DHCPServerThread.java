@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -34,8 +35,9 @@ public class DHCPServerThread implements Runnable {
 	 * Returning a DHCPOffer given the received DHCPDiscoverMessage.
 	 * @param message the received DHCPDiscoverMessage that is used to make the offer
 	 * @return
+     * 
 	 */
-	private DHCPOffer processDiscover(DHCPMessage message){
+	private DHCPOffer processDiscover(DHCPMessage message) {
 		Map<DHCPOption,byte[]>options = message.getOptionsMap();
 		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
@@ -56,7 +58,7 @@ public class DHCPServerThread implements Runnable {
 				leaseTime = addressKeeper.getMaxLeaseTime();
 			}
 		}
-		
+		addressKeeper.addNewOffer(IP, message.getChaddr());
 		return new DHCPOffer(message.getXid(), IP, this.serverAddress,message.getChaddr() , DHCPOffer.getDefaultOptions(leaseTime, this.serverAddress));
 	}
 	/**
@@ -65,9 +67,37 @@ public class DHCPServerThread implements Runnable {
 	 * @return
 	 */
 	private DHCPAck processRequest(DHCPMessage message){
+		Map<DHCPOption,byte[]>options = message.getOptionsMap();
+		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
+		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
+		// If the user has selected another DHCPServer
+		if (message.getSiaddr() != null && message.getSiaddr() != this.serverAddress){
+			addressKeeper.removeOfferByClientIdentifier(message.getChaddr());
+		}
+		//If the user select this DHCPServer the lease must be added
+		// If successfull return ACK else NAK
+		else if (message.getSiaddr() != null && message.getSiaddr() != this.serverAddress ){}
+		/*
+		 * DHCPREQUEST generated during RENEWING state:
+
+      'server identifier' MUST NOT be filled in, 'requested IP address'
+      option MUST NOT be filled in, 'ciaddr' MUST be filled in with
+      client's IP address. In this situation, the client is completely
+      configured, and is trying to extend its lease. This message will
+      be unicast, so no relay agents will be involved in its
+      transmission.  Because 'giaddr' is therefore not filled in, the
+      DHCP server will trust the value in 'ciaddr', and use it when
+      replying to the client.
+		 */
+		else if (message.getSiaddr() == null && IP == null && message.getCiaddr() != null){}
 		return null;
 	}
-	private void processRelease(DHCPMessage message){}
+	private void processRelease(DHCPMessage message){
+		// check if client has IP and then release it.
+		if (addressKeeper.hasIP(message.getChaddr(), message.getCiaddr())){
+			addressKeeper.removeLease(message.getCiaddr());
+		}
+	}
 	/**
 	 * 
 	 * @return

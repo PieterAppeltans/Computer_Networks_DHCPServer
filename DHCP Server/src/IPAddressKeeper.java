@@ -37,10 +37,21 @@ public class IPAddressKeeper {
 			result[i] = mask[i];
 		}
 		for (int j = maxMaskValue+1;j<mask.length;j++){
-			int s = (int) start[j] & 0xff;
-			int e = (int) end[j] & 0xff;
-			int c = (int) clientIdentifier[j] & 0xff;
-			result[j] = (byte) ((e-s)*((double)c/255)+s);
+			if (start == end){
+				maxMaskValue = j;
+			}
+			else{
+				int s = (int) start[j] & 0xff;
+				int e = (int) end[j] & 0xff;
+				int c = (int) clientIdentifier[j] & 0xff;
+				result[j] = (byte) ((e-s)*((double)c/255)+s);
+			}
+		}
+		while (inUse(result) || inOffer(result)){
+			Random rand = new Random();
+			byte[] temp = new byte[result.length - (maxMaskValue+1)];
+			rand.nextBytes(temp);
+			System.arraycopy(temp, 0, result, maxMaskValue, result.length);
 		}
 		try {
 			return InetAddress.getByAddress(result);
@@ -48,6 +59,10 @@ public class IPAddressKeeper {
 			// TODO Auto-generated catch block
 			return null;
 		}
+	}
+	private boolean inOffer(byte[] result) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	/**
 	 * 
@@ -59,16 +74,28 @@ public class IPAddressKeeper {
 	public boolean inUse(byte[] ipaddr){
 		return false;
 	}
+	public boolean hasIP(byte[]clientIdentifier,byte[] IP){
+		return false;
+	}
 	/**
 	 * Adding a new lease to the map leasedIP
 	 * @param ipaddress The address which is leased
 	 * @param clientIdentifier A unique client identifier
 	 * @param endOfLease Time at which lease expires
 	 */
-	public void addNewLease(InetAddress ipaddress, byte[] clientIdentifier,int endOfLease){
-		leasedIP.put(ipaddress,new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)endOfLease)});
+	public void addNewLease(byte[] ipaddress, byte[] clientIdentifier,int endOfLease){
+		this.removeOffer(ipaddress);
+		try {
+			leasedIP.put(InetAddress.getByAddress(ipaddress),new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)endOfLease)});
+		} catch (UnknownHostException e) {
+			ErrorPrinter.print("The illegal IP address" + ipaddress.toString() + " was not added");
+		}
 	}
-	public void removeLease(InetAddress toBeRemoved){
+	public void updateLease(byte[] ipaddress,int newEndOfLease){}
+	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){}
+	public void removeOffer(byte[] toBeRemoved){}
+	public void removeOfferByClientIdentifier(byte[] clientIdetifier){}
+	public void removeLease(byte[] toBeRemoved){
 		leasedIP.remove(toBeRemoved);
 	}
 	/**
@@ -79,7 +106,7 @@ public class IPAddressKeeper {
 		for (InetAddress key : leasedIP.keySet()) {
 			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
 			if (endOfLease.isBefore(LocalDateTime.now())){
-				removeLease(key);
+				removeLease(key.getAddress());
 			}
 		}
 	}

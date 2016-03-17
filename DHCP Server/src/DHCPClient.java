@@ -14,15 +14,30 @@ public class DHCPClient {
 	
 	public DHCPClient(InetAddress DHCPServerAdrress,int port){
 		udpclient = new UDPClient(DHCPServerAdrress,port);
-		state = DHCPClientStates.INIT;
+		state = DHCPClientState.INIT;
 		chaddr = getChaddr();
 	}
 	
 	private UDPClient udpclient;
-	private DHCPClientStates state;
+	/**
+	 * Storing a the current state of this DHCPClient conform the states specified in RF2311
+	 */
+	private DHCPClientState state;
+	/**
+	 *
+	 */
 	private byte[] serverIdentifier;
+	/**
+	 * 
+	 */
 	private byte[] offeredAddress;
+	/**
+	 * 
+	 */
 	private byte[] receivedAddress;
+	/**
+	 * 
+	 */
 	private int xid;
 	/**
 	 * Storing the time at which the client must tries to extend its lease (cfr. RENEWING STATE)
@@ -42,7 +57,7 @@ public class DHCPClient {
 	public void init() {
 		int timeout = 0; 
 		Random rand = new Random();
-		while (state == DHCPClientStates.INIT){
+		while (state == DHCPClientState.INIT){
 			if (timeout != 0){				
 				try{
 					Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
@@ -79,7 +94,7 @@ public class DHCPClient {
 						&& parsedMessage.getXid() == this.xid ){
 					this.serverIdentifier = parsedMessage.getSiaddr();
 					this.offeredAddress = parsedMessage.getYiaddr();
-					this.state = DHCPClientStates.REQUESTING;
+					this.state = DHCPClientState.REQUESTING;
 					System.out.println("TO REQUESTING STATE");	
 				}
 				else{
@@ -105,7 +120,7 @@ public class DHCPClient {
 	public void request(){
 		int timeout = 0; 
 		Random rand = new Random();
-		while (this.state == DHCPClientStates.REQUESTING){
+		while (this.state == DHCPClientState.REQUESTING){
 			if (timeout != 0){				
 				try{
 				Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
@@ -153,14 +168,14 @@ public class DHCPClient {
 						ByteBuffer buf2 = ByteBuffer.wrap(t2);
 						this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
 					}
-					this.state = DHCPClientStates.BOUND;
+					this.state = DHCPClientState.BOUND;
 					this.receivedAddress = parsedMessage.getYiaddr();
 					System.out.println("TO BOUND STATE");
 				}
 				else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
 						&& parsedMessage.getXid() == this.xid ){
 					ErrorPrinter.print("Returning to INIT state due to DHCPNAK.");
-					this.state = DHCPClientStates.INIT;
+					this.state = DHCPClientState.INIT;
 				}
 				else{ // if the client receives neither a DHCPACK or a DHCPNAK message.  The client retransmits the DHCPREQUEST
 					if (timeout == 0){
@@ -171,7 +186,7 @@ public class DHCPClient {
 					     receives neither a DHCPACK or a DHCPNAK message after employing the
 					     retransmission algorithm, the client reverts to INIT state and
 					     restarts the initialization process.*/
-						this.state = DHCPClientStates.INIT;   
+						this.state = DHCPClientState.INIT;   
 						// The client SHOULD notify the user that the initialization process has failed and is restarting.
 						ErrorPrinter.print("Returning to INIT state due to not receiving an answer.");
 					}
@@ -189,7 +204,7 @@ public class DHCPClient {
 				     receives neither a DHCPACK or a DHCPNAK message after employing the
 				     retransmission algorithm, the client reverts to INIT state and
 				     restarts the initialization process.*/
-					this.state = DHCPClientStates.INIT;
+					this.state = DHCPClientState.INIT;
 					// The client SHOULD notify the user that the initialization process has failed and is restarting.
 					ErrorPrinter.print("Returning to INIT state due to not receiving an answer.");
 				}
@@ -201,7 +216,7 @@ public class DHCPClient {
 	}
 	
 	public void release(){
-		if (this.state == DHCPClientStates.BOUND){	
+		if (this.state == DHCPClientState.BOUND){	
 			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getDefaultOptions());
 			message.print();
 			byte[] returnMessage = null;
@@ -220,8 +235,8 @@ public class DHCPClient {
 	public void renew(){
 		int timeout = 0;
 		System.out.println("TO RENEWING STATE");
-		this.state = DHCPClientStates.RENEWING;
-		while (this.state == DHCPClientStates.RENEWING){
+		this.state = DHCPClientState.RENEWING;
+		while (this.state == DHCPClientState.RENEWING){
 			if (timeout != 0){				
 				try{
 					Thread.sleep(timeout*1000);
@@ -271,7 +286,7 @@ public class DHCPClient {
 						ByteBuffer buf2 = ByteBuffer.wrap(t2);
 						this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
 					}
-					this.state = DHCPClientStates.BOUND;
+					this.state = DHCPClientState.BOUND;
 					System.out.println("TO BOUND STATE");
 				}
 			} else {
@@ -292,8 +307,8 @@ public class DHCPClient {
 	public void rebind(){
 		int timeout = 0;
 		System.out.println("TO REBINDING STATE");
-		this.state = DHCPClientStates.REBINDING;
-		while (this.state == DHCPClientStates.REBINDING){
+		this.state = DHCPClientState.REBINDING;
+		while (this.state == DHCPClientState.REBINDING){
 			if (timeout != 0){				
 				try{
 					Thread.sleep(timeout*1000);
@@ -337,7 +352,7 @@ public class DHCPClient {
 						ByteBuffer buf2 = ByteBuffer.wrap(t2);
 						this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
 					}
-					this.state = DHCPClientStates.BOUND;
+					this.state = DHCPClientState.BOUND;
 					System.out.println("TO BOUND STATE");
 				}
 			} else {
@@ -348,24 +363,25 @@ public class DHCPClient {
 				// If the lease expires before the client receives a DHCPACK, the client
 				// moves to INIT state.
 				if (this.leaseTime.isBefore(LocalDateTime.now())){
-					this.state = DHCPClientStates.INIT;
+					this.state = DHCPClientState.INIT;
 				}
 			}
 		}
 	}
+	/**
+	 * Method that converts a signed int to an unsigned long
+	 * eg -1 = 0xffffffff => 2**32-1 
+	 * @param signed The signed integer to be converted
+	 * @return The unsigned long from which the 4 least significant bytes equals the 4 bytes of the signed int. 
+	 */
 	private long toUnsigned(int signed){
-		if (signed<0){
-			return (long) (Math.pow(2,31) - Math.abs(signed)) + (long) Math.pow(2,31);
-		}
-		else{
-			return signed;
-		}
+		return (long)(signed) &0x00000000ffffffffL;
 	}
 	
 	public void run(){
 		while (true){
 			
-			if (this.state == DHCPClientStates.INIT){ // already gets checked within init()?
+			if (this.state == DHCPClientState.INIT){ // already gets checked within init()?
 				this.init();
 				this.request();
 			} 
@@ -378,8 +394,16 @@ public class DHCPClient {
 			}
 		}
 	}
+	/**
+	 * Variable storing the hardware address of this client
+	 */
 	private byte [] chaddr;
-	public byte[] getChaddr(){
+	/**
+	 * A method that gets the hardware address of this client. If this is not available eg. due to no rights a
+	 * random MAC-address is generated.
+	 * @return A MAC-address if possible the one of the client PC else a random MAC like address.
+	 */
+	public static byte[] getChaddr(){
 		try{
 			InetAddress ip = InetAddress.getLocalHost();
 			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
@@ -392,6 +416,7 @@ public class DHCPClient {
 			System.arraycopy(empty, 0, chaddr, 6, 10);
 			return chaddr;
 		}
+		// If it's not possible to get the MAC a random one is generated.
 		catch (Exception e){
 			Random rand = new Random();
 			byte[] mac = new byte[6]; // random fixed mac address

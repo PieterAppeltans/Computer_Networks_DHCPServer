@@ -2,9 +2,18 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * Class that contains method to parse byte arrays to DHCPMessages
+ * 
+ *
+ */
 public class MessageParser {
-	
+	/**
+	 * A method that parse a byte array to a DHCP message
+	 * @param message The byte array to be parsed
+	 * @param optionLength The length of the optionfield in number of bytes
+	 * @return A DCHP Message with all the data in the message
+	 */
 	public static DHCPMessage parseMessage(byte[]message,int optionLength){
 		ByteBuffer buf = ByteBuffer.wrap(message);
 		byte opcode = buf.get();

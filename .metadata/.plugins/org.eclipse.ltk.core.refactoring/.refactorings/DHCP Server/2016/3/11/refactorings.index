@@ -6,3 +6,4 @@
 1458222764754	Rename type 'UDPServerThread'
 1458222810785	Rename type 'AdressKeeper'
 1458222887481	Rename type 'IPAdressKeeper'
+1458249231098	Rename type 'DHCPClientStates'
