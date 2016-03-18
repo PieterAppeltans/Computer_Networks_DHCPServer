@@ -64,15 +64,9 @@ public class IPAddressKeeper {
 			return null;
 		}
 	}
-	private boolean inOffer(byte[] ipaddr) {
-		try {
-			InetAddress inetaddress = InetAddress.getByAddress(ipaddr);
-			return offeredIP.containsKey(inetaddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			return false;
-		}
-		
+	private boolean inOffer(byte[] result) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	/**
 	 * 
@@ -137,41 +131,13 @@ public class IPAddressKeeper {
 		
 	}
 	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){
-		try {
-			InetAddress inetaddress = InetAddress.getByAddress(ipaddress);
-			offeredIP.put(inetaddress, new Object[]{ipaddress,LocalDateTime.now().plusSeconds(60)});
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
 		
 	}
 	public void removeOffer(byte[] toBeRemoved){
-		try {
-			InetAddress inetaddress = InetAddress.getByAddress(toBeRemoved);
-			offeredIP.remove(inetaddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
+		
 	}
-	public void removeOfferByClientIdentifier(byte[] clientIdentifier){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length;i>=0;i--){
-			InetAddress key = keys[i];
-			byte[] chaddr = (byte[]) offeredIP.get(key)[0];
-			if (Arrays.equals(chaddr,clientIdentifier)){
-				offeredIP.remove(key);
-			}
-		}
-	}
-	public void removeExpiredOffer(){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length;i>=0;i--){
-			InetAddress key = keys[i];
-			LocalDateTime endOfLease = (LocalDateTime) offeredIP.get(key)[1];
-			if (endOfLease.isBefore(LocalDateTime.now())){
-				offeredIP.remove(key);
-			}
-		}
+	public void removeOfferByClientIdentifier(byte[] clientIdetifier){
+		
 	}
 	public void removeLease(byte[] toBeRemoved){
 		InetAddress inetaddress;
@@ -187,37 +153,22 @@ public class IPAddressKeeper {
 	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
 	 */
 	public void removeExpiredLeases(){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length; i>= 0;i--) {
-			InetAddress key = keys[i];
+		// TODO check if all keys are checked
+		for (InetAddress key : leasedIP.keySet()) {
 			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
 			if (endOfLease.isBefore(LocalDateTime.now())){
 				removeLease(key.getAddress());
 			}
 		}
 	}
-	private void printIPMap(Map<InetAddress,Object[]> map){
-		for (InetAddress address:map.keySet()){
-			byte[] chaddr = (byte[]) leasedIP.get(address)[0];
-			LocalDateTime localTime = (LocalDateTime) leasedIP.get(address)[1];
-			System.out.println(address.toString()+chaddr.toString()+localTime.toString());
-		}
-	}
-	public void printLeasedIP(){
-		System.out.println("----------------Leased IP---------------------");
-		printIPMap(this.leasedIP);
-	}
-	public void printOfferedIP(){
-		System.out.println("----------------Offered IP---------------------");
-		printIPMap(this.offeredIP);
-	}
-	public long getDefaultLeaseTime() {
+	public int getDefaultLeaseTime() {
 		return this.defaultLeaseTime;
 	}
-	public long getMinLeaseTime(){
+	public int getMinLeaseTime(){
 		return this.minLeaseTime;
 	}
-	public long getMaxLeaseTime(){
+	public int getMaxLeaseTime(){
 		return this.maxLeaseTime;
 	}
+	
 }

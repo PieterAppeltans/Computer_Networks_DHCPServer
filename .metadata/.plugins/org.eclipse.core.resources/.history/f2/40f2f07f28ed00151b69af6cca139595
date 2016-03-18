@@ -4,7 +4,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 public class DHCPServerThread implements Runnable {
@@ -42,7 +41,7 @@ public class DHCPServerThread implements Runnable {
 		Map<DHCPOption,byte[]>options = message.getOptionsMap();
 		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
-		long leaseTime;
+		int leaseTime;
 		if ((IP == null) || !(addressKeeper.inRange(IP) && !addressKeeper.inUse(IP)) ){
 			IP = addressKeeper.generateNewInetAddress(message.getChaddr()).getAddress();
 		}
@@ -51,7 +50,7 @@ public class DHCPServerThread implements Runnable {
 		}
 		else{
 			ByteBuffer buf = ByteBuffer.wrap(t);
-			leaseTime = toUnsigned(buf.getInt());
+			leaseTime = buf.getInt();
 			if (leaseTime < addressKeeper.getMinLeaseTime()){
 				leaseTime = addressKeeper.getMinLeaseTime();
 			}
@@ -60,16 +59,7 @@ public class DHCPServerThread implements Runnable {
 			}
 		}
 		addressKeeper.addNewOffer(IP, message.getChaddr());
-		return new DHCPOffer(message.getXid(), IP, this.serverAddress,message.getChaddr() , DHCPOffer.getDefaultOptions((int)leaseTime, this.serverAddress));
-	}
-	/**
-	 * Method that converts a signed int to an unsigned long
-	 * eg -1 = 0xffffffff => 2**32-1 
-	 * @param signed The signed integer to be converted
-	 * @return The unsigned long from which the 4 least significant bytes equals the 4 bytes of the signed int. 
-	 */
-	private long toUnsigned(int signed){
-		return (long)(signed) &0x00000000ffffffffL;
+		return new DHCPOffer(message.getXid(), IP, this.serverAddress,message.getChaddr() , DHCPOffer.getDefaultOptions(leaseTime, this.serverAddress));
 	}
 	/**
 	 * 
@@ -80,33 +70,13 @@ public class DHCPServerThread implements Runnable {
 		Map<DHCPOption,byte[]>options = message.getOptionsMap();
 		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
-		long leaseTime;
-		if (t == null){
-			leaseTime = addressKeeper.getDefaultLeaseTime();
-		}
-		else{
-			ByteBuffer buf = ByteBuffer.wrap(t);
-			leaseTime = toUnsigned(buf.getInt());
-			if (leaseTime < addressKeeper.getMinLeaseTime()){
-				leaseTime = addressKeeper.getMinLeaseTime();
-			}
-			else if (leaseTime > addressKeeper.getMaxLeaseTime()){
-				leaseTime = addressKeeper.getMaxLeaseTime();
-			}
-		}
 		// If the user has selected another DHCPServer
 		if (message.getSiaddr() != null && message.getSiaddr() != this.serverAddress){
 			addressKeeper.removeOfferByClientIdentifier(message.getChaddr());
-			return null;
 		}
 		//If the user select this DHCPServer the lease must be added
 		// If successfull return ACK else NAK
-		else if (message.getSiaddr() != null && message.getSiaddr() == this.serverAddress && IP != null){
-			if (!addressKeeper.inUse(IP)){
-				addressKeeper.addNewLease(IP,message.getChaddr(),(int)leaseTime );
-				DHCPAck returnMessage = new DHCPAck(message.getXid(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
-			}
-		}
+		else if (message.getSiaddr() != null && message.getSiaddr() != this.serverAddress ){}
 		/*
 		 * DHCPREQUEST generated during RENEWING state:
 

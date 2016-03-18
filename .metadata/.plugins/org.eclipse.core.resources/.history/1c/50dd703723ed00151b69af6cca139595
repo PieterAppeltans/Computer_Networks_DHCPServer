@@ -47,32 +47,22 @@ public class IPAddressKeeper {
 				result[j] = (byte) ((e-s)*((double)c/255)+s);
 			}
 		}
-		int counter = 0;
-		while ((inUse(result) || inOffer(result)) && counter<50){
+		while (inUse(result) || inOffer(result)){
 			Random rand = new Random();
 			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
 			System.arraycopy(temp, 0, result, maxMaskValue, result.length);
-			counter++;
-		}
-		if (counter == 50){
-			return null;
 		}
 		try {
 			return InetAddress.getByAddress(result);
 		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
 			return null;
 		}
 	}
-	private boolean inOffer(byte[] ipaddr) {
-		try {
-			InetAddress inetaddress = InetAddress.getByAddress(ipaddr);
-			return offeredIP.containsKey(inetaddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			return false;
-		}
-		
+	private boolean inOffer(byte[] result) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	/**
 	 * 
@@ -126,98 +116,33 @@ public class IPAddressKeeper {
 			ErrorPrinter.print("The illegal IP address" + ipaddress.toString() + " was not added");
 		}
 	}
-	public void updateLease(byte[] ipaddress,int newEndOfLease){
-		InetAddress inetaddress;
-		try {
-			inetaddress = InetAddress.getByAddress(ipaddress);
-			leasedIP.get(inetaddress)[1] = LocalDateTime.now().plusSeconds(newEndOfLease);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-		
-	}
-	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){
-		try {
-			InetAddress inetaddress = InetAddress.getByAddress(ipaddress);
-			offeredIP.put(inetaddress, new Object[]{ipaddress,LocalDateTime.now().plusSeconds(60)});
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-		
-	}
-	public void removeOffer(byte[] toBeRemoved){
-		try {
-			InetAddress inetaddress = InetAddress.getByAddress(toBeRemoved);
-			offeredIP.remove(inetaddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-	}
-	public void removeOfferByClientIdentifier(byte[] clientIdentifier){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length;i>=0;i--){
-			InetAddress key = keys[i];
-			byte[] chaddr = (byte[]) offeredIP.get(key)[0];
-			if (Arrays.equals(chaddr,clientIdentifier)){
-				offeredIP.remove(key);
-			}
-		}
-	}
-	public void removeExpiredOffer(){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length;i>=0;i--){
-			InetAddress key = keys[i];
-			LocalDateTime endOfLease = (LocalDateTime) offeredIP.get(key)[1];
-			if (endOfLease.isBefore(LocalDateTime.now())){
-				offeredIP.remove(key);
-			}
-		}
-	}
+	public void updateLease(byte[] ipaddress,int newEndOfLease){}
+	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){}
+	public void removeOffer(byte[] toBeRemoved){}
+	public void removeOfferByClientIdentifier(byte[] clientIdetifier){}
 	public void removeLease(byte[] toBeRemoved){
-		InetAddress inetaddress;
-		try {
-			inetaddress = InetAddress.getByAddress(toBeRemoved);
-			leasedIP.remove(inetaddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-		
+		leasedIP.remove(toBeRemoved);
 	}
 	/**
 	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
 	 */
 	public void removeExpiredLeases(){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length; i>= 0;i--) {
-			InetAddress key = keys[i];
+		// TODO check if all keys are checked
+		for (InetAddress key : leasedIP.keySet()) {
 			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
 			if (endOfLease.isBefore(LocalDateTime.now())){
 				removeLease(key.getAddress());
 			}
 		}
 	}
-	private void printIPMap(Map<InetAddress,Object[]> map){
-		for (InetAddress address:map.keySet()){
-			byte[] chaddr = (byte[]) leasedIP.get(address)[0];
-			LocalDateTime localTime = (LocalDateTime) leasedIP.get(address)[1];
-			System.out.println(address.toString()+chaddr.toString()+localTime.toString());
-		}
-	}
-	public void printLeasedIP(){
-		System.out.println("----------------Leased IP---------------------");
-		printIPMap(this.leasedIP);
-	}
-	public void printOfferedIP(){
-		System.out.println("----------------Offered IP---------------------");
-		printIPMap(this.offeredIP);
-	}
-	public long getDefaultLeaseTime() {
+	public int getDefaultLeaseTime() {
 		return this.defaultLeaseTime;
 	}
-	public long getMinLeaseTime(){
+	public int getMinLeaseTime(){
 		return this.minLeaseTime;
 	}
-	public long getMaxLeaseTime(){
+	public int getMaxLeaseTime(){
 		return this.maxLeaseTime;
 	}
+	
 }

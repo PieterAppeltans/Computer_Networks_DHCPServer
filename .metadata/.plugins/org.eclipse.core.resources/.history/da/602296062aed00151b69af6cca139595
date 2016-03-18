@@ -20,7 +20,7 @@ public class DHCPAck extends DHCPMessage {
 	}
 	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(){
-		return DHCPAck.getDefaultOptions(86400, // 86400s (1 day)
+		return DHCPAck.getDefaultOptions(new byte[]{ (byte) 0, (byte) 0x01, (byte) 0x51, (byte) 0x80 }, // 86400s (1 day)
 					   	  new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x01 }, // 192.168.1.1 DHCP server
 					   	  true);
 	}

@@ -97,15 +97,11 @@ public class DHCPServerThread implements Runnable {
 		// If the user has selected another DHCPServer
 		if (message.getSiaddr() != null && message.getSiaddr() != this.serverAddress){
 			addressKeeper.removeOfferByClientIdentifier(message.getChaddr());
-			return null;
 		}
 		//If the user select this DHCPServer the lease must be added
 		// If successfull return ACK else NAK
 		else if (message.getSiaddr() != null && message.getSiaddr() == this.serverAddress && IP != null){
-			if (!addressKeeper.inUse(IP)){
-				addressKeeper.addNewLease(IP,message.getChaddr(),(int)leaseTime );
-				DHCPAck returnMessage = new DHCPAck(message.getXid(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
-			}
+			addressKeeper.addNewLease(IP,message.getChaddr(),LocalDateTime.now().plusSeconds(leaseTime) );
 		}
 		/*
 		 * DHCPREQUEST generated during RENEWING state:

@@ -104,7 +104,7 @@ public class DHCPServerThread implements Runnable {
 		else if (message.getSiaddr() != null && message.getSiaddr() == this.serverAddress && IP != null){
 			if (!addressKeeper.inUse(IP)){
 				addressKeeper.addNewLease(IP,message.getChaddr(),(int)leaseTime );
-				DHCPAck returnMessage = new DHCPAck(message.getXid(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
+				DHCPAck returnMessage = new DHCPAck(message.getXid(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions(leaseTime,this.serverAddress,true));
 			}
 		}
 		/*

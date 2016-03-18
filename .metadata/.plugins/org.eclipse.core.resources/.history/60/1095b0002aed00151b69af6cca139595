@@ -1,4 +1,3 @@
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,23 +19,19 @@ public class DHCPAck extends DHCPMessage {
 	}
 	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(){
-		return DHCPAck.getDefaultOptions(86400, // 86400s (1 day)
+		return DHCPAck.getDefaultOptions(new byte[]{ (byte) 0, (byte) 0x01, (byte) 0x51, (byte) 0x80 }, // 86400s (1 day)
 					   	  new byte[]{ (byte) 0xC0, (byte) 0xA8, (byte) 0x01, (byte) 0x01 }, // 192.168.1.1 DHCP server
 					   	  true);
 	}
 	
-	public static Map<DHCPOption,byte[]> getDefaultOptions(int leaseTime, byte[] serverIp, boolean acknowledged){
-		ByteBuffer buf = ByteBuffer.allocate(4);
-		buf.putInt(leaseTime);
-		byte [] t = new byte[4];
-		buf.get(t);
+	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] leaseTime, byte[] serverIp, boolean acknowledged){
 		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
 		if (acknowledged){
 			options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPACK.getByte()});
 		} else {
 			options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()});
 		}
-		options.put(DHCPOption.IPADDRESSLEASETIME, t);
+		options.put(DHCPOption.IPADDRESSLEASETIME, leaseTime);
 		options.put(DHCPOption.SERVERIDENTIFIER, serverIp);
 		// EXTRA:
 		// 

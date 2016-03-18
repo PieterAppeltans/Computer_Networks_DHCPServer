@@ -196,28 +196,20 @@ public class IPAddressKeeper {
 			}
 		}
 	}
-	private void printIPMap(Map<InetAddress,Object[]> map){
+	public void printIPMap(Map<InetAddress,Object[]> map){
 		for (InetAddress address:map.keySet()){
 			byte[] chaddr = (byte[]) leasedIP.get(address)[0];
 			LocalDateTime localTime = (LocalDateTime) leasedIP.get(address)[1];
 			System.out.println(address.toString()+chaddr.toString()+localTime.toString());
 		}
 	}
-	public void printLeasedIP(){
-		System.out.println("----------------Leased IP---------------------");
-		printIPMap(this.leasedIP);
-	}
-	public void printOfferedIP(){
-		System.out.println("----------------Offered IP---------------------");
-		printIPMap(this.offeredIP);
-	}
-	public long getDefaultLeaseTime() {
+	public int getDefaultLeaseTime() {
 		return this.defaultLeaseTime;
 	}
-	public long getMinLeaseTime(){
+	public int getMinLeaseTime(){
 		return this.minLeaseTime;
 	}
-	public long getMaxLeaseTime(){
+	public int getMaxLeaseTime(){
 		return this.maxLeaseTime;
 	}
 }
