@@ -71,8 +71,5 @@ public class UDPClient {
 		}
 		
 	}
-	public void close(){
-		this.clientSocket.close();
-	}
 	
 }

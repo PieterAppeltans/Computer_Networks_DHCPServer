@@ -48,14 +48,15 @@ public class UDPClient {
 	 * @param sendData
 	 * @throws Exception
 	 */
-	public void send(byte[] sendData) throws Exception{         
+	public void send(byte[] sendData) throws Exception{       
+		   
 		//byte[] receiveData = new byte[receiveSize];
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
 		this.clientSocket.send(sendPacket);
 		//DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		//clientSocket.receive(receivePacket);
 		//System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
-		//this.clientSocket.close();
+		this.clientSocket.close();
 		//return receiveData;
 		}
 	public byte[] receive() {
@@ -63,16 +64,13 @@ public class UDPClient {
 			byte[] receiveData = new byte[receiveSize];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			this.clientSocket.receive(receivePacket);
-			//this.clientSocket.close();
+			this.clientSocket.close();
 			return receiveData;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
 		
-	}
-	public void close(){
-		this.clientSocket.close();
 	}
 	
 }

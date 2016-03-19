@@ -37,7 +37,7 @@ public class IPAddressKeeper {
 	private int defaultLeaseTime;
 	private int maxLeaseTime;
 	private int minLeaseTime;
-	// ConcurentHashMap instead of regular HashMap because used in multi-threaded environment.
+
 	private Map<InetAddress,Object[]> leasedIP = new ConcurrentHashMap<InetAddress, Object[]>();
 	private Map<InetAddress,Object[]> offeredIP = new ConcurrentHashMap<InetAddress,Object[]>();
 

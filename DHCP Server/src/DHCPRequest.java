@@ -40,4 +40,9 @@ public class DHCPRequest extends DHCPMessage {
 		return options;
 	}
 	
+	@Override
+	public String getClassName() {
+		return "DHCPREQUEST";
+	}
+	
 }

@@ -36,4 +36,9 @@ public class DHCPDiscover extends DHCPMessage {
 		return options;
 	}
 	
+	@Override
+	public String getClassName() {
+		return "DHCPDISCOVER";
+	}
+	
 }

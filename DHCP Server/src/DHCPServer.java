@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
@@ -7,33 +6,54 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
 
 public class DHCPServer {
 	
+	/**
+	 * Constructor for a DHCPServer which is configured according to the specifications provided in a .txt file.
+	 * 
+	 * @param 	configurationAddress
+	 * 				The relative path to the configuration .txt file for the server.
+	 */
 	public DHCPServer(String configurationAddress){
 		try{
 			this.processConfigurationFile(configurationAddress);
 		}
 		catch (IOException e){
 			ErrorPrinter.print("Configuration File not found");
-		}
-		
-		
+		}		
 	}
+	
+	/**
+	 * Constructor for a DHCPServer which is configured by manually entering values for the according fields.
+	 * 
+	 * @param 	port
+	 * 				The port on which the server will be listening.
+	 * @param 	start
+	 * 				The start address of the range of addresses the server can distribute.
+	 * @param 	end
+	 * 				The end address of the range of addresses the server can distribute.
+	 * @param 	mask
+	 * 				The fixed upper bytes of the range of addresses the server can distribute.
+	 * @param 	defaultLeaseTime
+	 * 				The default lease time offered to a client by the server.
+	 * @param 	maxLeaseTime
+	 * 				The maximal lease time offered to a client by the server.
+	 * @param 	minLeaseTime
+	 * 				The minimal lease time offered to a client by the server.
+	 */
 	public DHCPServer(int port,byte[] start,byte[] end, byte[] mask,int defaultLeaseTime,int maxLeaseTime,int minLeaseTime){
 		this.port = port;
 		this.addressKeeper = new IPAddressKeeper(start, end, mask, defaultLeaseTime, maxLeaseTime, minLeaseTime);
 	} 
-	// TODO Finish reading from configuration file.
-	// File format
-	// PORT:23532
-	// START:0.0.12.12
-	// END:0.0.16.12
-	// MASK:14.12.0.0
-	// DEFAULTLEASETIME:2423
-	// MAXLEASETIME:23524
-	// MINLEASETIME:2123
+
+	/**
+	 * Configure the server according to the specifications provided in a .txt file.
+	 * 
+	 * @param 	configurationAddress
+	 * 				The relative path to the configuration .txt file for the server.
+	 * @throws 	IOException
+	 */
 	private void processConfigurationFile(String configurationAddress) throws IOException {
 		BufferedReader br = new BufferedReader(new FileReader(configurationAddress));
 		Map<String,String> options = new HashMap<String,String>();
@@ -49,9 +69,23 @@ public class DHCPServer {
 		    br.close();
 		}
 		this.port = Integer.parseInt(options.get("PORT"));
-		
+		InetAddress startIP = InetAddress.getByName(options.get("START"));
+		byte[] start = startIP.getAddress();
+		InetAddress endIP = InetAddress.getByName(options.get("END"));
+		byte[] end = endIP.getAddress();
+		InetAddress maskIP = InetAddress.getByName(options.get("MASK"));
+		byte[] mask = maskIP.getAddress();
+		int defaultLeaseTime = Integer.parseInt(options.get("DEFAULTLEASETIME"));
+		int maxLeaseTime = Integer.parseInt(options.get("MAXLEASETIME"));
+		int minLeaseTime = Integer.parseInt(options.get("MINLEASETIME"));
+		this.addressKeeper = new IPAddressKeeper(start, end, mask, defaultLeaseTime, maxLeaseTime, minLeaseTime);
 	}
 
+	/**
+	 * Run the server. Five seperate threads are running simultaneously.
+	 * 
+	 * @throws 	Exception
+	 */
 	public void run() throws Exception{
 		ExecutorService executor = Executors.newFixedThreadPool(5);
 		DatagramSocket serverSocket = new DatagramSocket(this.port);
@@ -65,13 +99,25 @@ public class DHCPServer {
 		}
 	}
 	
+	/**
+	 * Returns the buffer size of the server. This is the maximal size of a message sent to the server.
+	 * 
+	 * @return	The buffer size of the server as an integer.
+	 */
 	public int getBufferSize(){
 		return this.bufferSize;
 	}
 	
+	/**
+	 * Sets the buffer size of the server. This is the maximal size of a message sent to the server.
+	 * 
+	 * @param 	buffersize
+	 * 				An integer representing the buffer size of the server.
+	 */
 	public void setBufferSize(int buffersize){
 		this.bufferSize = buffersize;
 	}
+	
 	private IPAddressKeeper addressKeeper;
 	private int bufferSize = 576;
 	private int port;

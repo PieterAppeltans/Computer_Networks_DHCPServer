@@ -173,9 +173,6 @@ public class DHCPServerThread implements Runnable {
 	 */
 	public DHCPMessage answerMessage(byte[] receivedMessage){
 		addressKeeper.removeExpiredLeases();
-		addressKeeper.removeExpiredOffers();
-		addressKeeper.printLeasedIP();
-		addressKeeper.printOfferedIP();
 		DHCPMessage parsedMessage = MessageParser.parseMessage(receivedMessage, 312);
 		parsedMessage.print(true);
 		Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();

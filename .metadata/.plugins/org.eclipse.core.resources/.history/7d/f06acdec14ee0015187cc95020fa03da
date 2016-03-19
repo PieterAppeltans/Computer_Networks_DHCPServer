@@ -212,11 +212,12 @@ public class DHCPClient {
 			message.print(true);
 			byte[] returnMessage = null;
 			try{
-
+<<<<<<< HEAD
 				udpclient.send(message.generateMessage());
 				returnMessage = udpclient.receive();// Does the server return anything at all?
-
-
+=======
+				returnMessage = udpclient.send(message.generateMessage());
+>>>>>>> a1a80efbc9edbfe2ae4e6f6ead2c374d4bc78f98
 			}	
 			catch (Exception e){
 			}

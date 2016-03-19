@@ -11,14 +11,9 @@ public class UDPClient {
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
 		this.receiveSize = receiveSize;
-		try {
-			this.clientSocket =  new DatagramSocket();
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}  
+		this.clientsocket = DatagramSocket clientSocket = new DatagramSocket();  
 	}
-	DatagramSocket clientSocket;
+	
 	/**
 	 * A method to set the size of the receive buffer
 	 * @param size Int, desired new size of the receive buffer
@@ -48,31 +43,30 @@ public class UDPClient {
 	 * @param sendData
 	 * @throws Exception
 	 */
-	public void send(byte[] sendData) throws Exception{         
+	public void send(byte[] sendData) throws Exception{       
+		   
 		//byte[] receiveData = new byte[receiveSize];
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
 		this.clientSocket.send(sendPacket);
 		//DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		//clientSocket.receive(receivePacket);
 		//System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
-		//this.clientSocket.close();
+		this.clientSocket.close();
 		//return receiveData;
 		}
 	public byte[] receive() {
+		DatagramSocket clientSocket;
 		try {
 			byte[] receiveData = new byte[receiveSize];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			this.clientSocket.receive(receivePacket);
-			//this.clientSocket.close();
+			this.clientSocket.close();
 			return receiveData;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
 		
-	}
-	public void close(){
-		this.clientSocket.close();
 	}
 	
 }

@@ -54,8 +54,6 @@ public class MessageParser {
 				parsedOptions.putAll(MessageParser.parseOptions(sname,false));
 			}
 		}
-		byte messageType = MessageParser.parseOptions(options).get(DHCPOption.DHCPMESSAGETYPE)[0];
-		System.out.println(DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType));
 		return new DHCPMessage(DHCPbidirectionalMap.OpcodeMap.getBackward(opcode),DHCPbidirectionalMap.HtypeMap.getBackward(htype),xid,secs,(boolean) flag,ciaddr,yiaddr,siaddr,giaddr,chaddr,parsedOptions);
 	}
 	
