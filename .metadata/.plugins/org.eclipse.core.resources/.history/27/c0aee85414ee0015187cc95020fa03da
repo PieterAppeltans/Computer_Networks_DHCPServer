@@ -251,8 +251,7 @@ public class DHCPClient {
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
-				 udpclient.send(message.generateMessage());
-				 returnMessage = udpclient.receive();
+				returnMessage = udpclient.send(message.generateMessage());
 			}	
 			catch (Exception e){
 			}
@@ -324,8 +323,7 @@ public class DHCPClient {
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
-				udpclient.send(message.generateMessage());
-				returnMessage = udpclient.receive();
+				returnMessage = udpclient.send(message.generateMessage());
 			}	
 			catch (Exception e){
 			}

@@ -62,7 +62,7 @@ public class UDPClient {
 			clientSocket.receive(receivePacket);
 			clientSocket.close();
 			return receiveData;
-		} catch (IOException e) {
+		} catch (SocketException | IOException e) {
 			e.printStackTrace();
 			return null;
 		}

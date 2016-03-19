@@ -3,7 +3,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 public class IPAddressKeeper {
@@ -21,8 +20,8 @@ public class IPAddressKeeper {
 	private int defaultLeaseTime;
 	private int maxLeaseTime;
 	private int minLeaseTime;
-	private Map<InetAddress,Object[]> leasedIP = new ConcurrentHashMap<InetAddress, Object[]>();
-	private Map<InetAddress,Object[]> offeredIP = new ConcurrentHashMap<InetAddress,Object[]>();
+	private Map<InetAddress,Object[]> leasedIP = new Hashtable<InetAddress, Object[]>();
+	private Map<InetAddress,Object[]> offeredIP = new Hashtable<InetAddress,Object[]>();
 	/**
 	 * A method that generate a new InetAddress based on the client identifier
 	 * @param clientIdentifier Unique client identifier, used to try to give the same client the same InetAddress if available

@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.net.*;
 
 public class UDPClient {
@@ -62,7 +61,7 @@ public class UDPClient {
 			clientSocket.receive(receivePacket);
 			clientSocket.close();
 			return receiveData;
-		} catch (IOException e) {
+		} catch (SocketException e) {
 			e.printStackTrace();
 			return null;
 		}

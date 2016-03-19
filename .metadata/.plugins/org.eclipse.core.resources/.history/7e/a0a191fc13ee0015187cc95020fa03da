@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.net.*;
 
 public class UDPClient {
@@ -54,19 +53,9 @@ public class UDPClient {
 		//return receiveData;
 		}
 	public byte[] receive() {
-		DatagramSocket clientSocket;
-		try {
-			clientSocket = new DatagramSocket();
-			byte[] receiveData = new byte[receiveSize];
-			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			clientSocket.receive(receivePacket);
-			clientSocket.close();
-			return receiveData;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-		
+		DatagramSocket clientSocket = new DatagramSocket();
+		byte[] receiveData = new byte[receiveSize];
+		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 	}
 	
 }
