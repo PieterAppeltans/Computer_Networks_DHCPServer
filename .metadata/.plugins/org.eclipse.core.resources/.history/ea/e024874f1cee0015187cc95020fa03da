@@ -73,7 +73,7 @@ public class IPAddressKeeper {
 			Random rand = new Random();
 			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
-			System.arraycopy(temp, 0, result, maxMaskValue+1, result.length - (maxMaskValue+1));
+			System.arraycopy(temp, 0, result, maxMaskValue, result.length - (maxMaskValue+1));
 			counter++;
 		}
 		if (counter == 50){

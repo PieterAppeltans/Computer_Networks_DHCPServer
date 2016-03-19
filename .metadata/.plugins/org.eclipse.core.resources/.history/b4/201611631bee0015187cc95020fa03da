@@ -73,8 +73,9 @@ public class IPAddressKeeper {
 			Random rand = new Random();
 			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
-			System.arraycopy(temp, 0, result, maxMaskValue+1, result.length - (maxMaskValue+1));
+			System.arraycopy(temp, 0, result, maxMaskValue, result.length - (maxMaskValue+1));
 			counter++;
+			System.out.println(result.toString());
 		}
 		if (counter == 50){
 			return null;
@@ -308,7 +309,7 @@ public class IPAddressKeeper {
 		for (InetAddress address:map.keySet()){
 			byte[] chaddr = (byte[]) map.get(address)[0];
 			LocalDateTime localTime = (LocalDateTime) map.get(address)[1];
-			System.out.println(address.toString()+" Leaser: "+Arrays.toString(chaddr)+" Until: "+localTime.toString());
+			System.out.println(address.toString()+chaddr.toString()+localTime.toString());
 		}
 	}
 	

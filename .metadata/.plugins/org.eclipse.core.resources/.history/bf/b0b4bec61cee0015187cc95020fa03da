@@ -13,7 +13,7 @@ public class UDPClient {
 		this.receiveSize = receiveSize;
 		try {
 			this.clientSocket =  new DatagramSocket();
-			this.clientSocket.setSoTimeout(10000);
+			this.clientSocket.setTimeout(10000);
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -67,6 +67,7 @@ public class UDPClient {
 			//this.clientSocket.close();
 			return receiveData;
 		} catch (IOException e) {
+			e.printStackTrace();
 			return null;
 		}
 		

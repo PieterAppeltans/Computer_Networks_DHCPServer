@@ -24,7 +24,7 @@ public class DHCPServer {
 		}
 		catch (IOException e){
 			ErrorPrinter.print("Configuration File not found, using default set up");
-			this.addressKeeper = new IPAddressKeeper(new byte[] {0,0,0,2}, new byte[] {0,0,0,(byte)255}, new byte[] {(byte)192,(byte)168,(byte)1,(byte)0}, 100, 1000, 10);
+			this.addressKeeper = new IPAddressKeeper("0.0.0.2", "0.0.0.255", "192.168.1.0", 100, 1000, 10);
 		}		
 	}
 	

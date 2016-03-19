@@ -100,14 +100,12 @@ public class DHCPClient {
 				}
 			}
 			else{
-				
 				if (timeout == 0){
 					timeout = 4; // delay before the first retransmission SHOULD be 4 seconds
 				}
 				else{
 					timeout = Math.min(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
 				}
-				ErrorPrinter.print("Socket Timed Out, waiting " + timeout + " seconds before retrying.");
 			}
 		}
 	}

@@ -6,10 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-/**
- * DHCPServer class.
- * @author Pieter Appeltans & Hans Cauwenbergh
- */
+
 public class DHCPServer {
 	
 	/**
@@ -23,8 +20,7 @@ public class DHCPServer {
 			this.processConfigurationFile(configurationAddress);
 		}
 		catch (IOException e){
-			ErrorPrinter.print("Configuration File not found, using default set up");
-			this.addressKeeper = new IPAddressKeeper(new byte[] {0,0,0,2}, new byte[] {0,0,0,(byte)255}, new byte[] {(byte)192,(byte)168,(byte)1,(byte)0}, 100, 1000, 10);
+			ErrorPrinter.print("Configuration File not found");
 		}		
 	}
 	
@@ -87,12 +83,12 @@ public class DHCPServer {
 	}
 
 	/**
-	 * Run the server. numberOfThreads separate threads are running simultaneously.
+	 * Run the server. Five seperate threads are running simultaneously.
 	 * 
 	 * @throws 	Exception
 	 */
 	public void run() throws Exception{
-		ExecutorService executor = Executors.newFixedThreadPool(this.numberOfThreads);
+		ExecutorService executor = Executors.newFixedThreadPool(5);
 		DatagramSocket serverSocket = new DatagramSocket(this.port);
 		byte[] receiveData = new byte[this.bufferSize];
 		while(true){                   
@@ -124,17 +120,8 @@ public class DHCPServer {
 	}
 	
 	private IPAddressKeeper addressKeeper;
-	/**
-	 * Storing the number of bytes that must be received.
-	 */
 	private int bufferSize = 576;
-	/**
-	 * The port at which the server socket is running. 
-	 */
-	private int port = 9000;
-	/**
-	 * The size of the thread pool
-	 */
-	private int numberOfThreads = 5;
+	private int port;
+	private int numberOfThreads;
 	
 }

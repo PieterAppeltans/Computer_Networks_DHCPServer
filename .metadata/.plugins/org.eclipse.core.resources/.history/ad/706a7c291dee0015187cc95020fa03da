@@ -107,7 +107,7 @@ public class DHCPClient {
 				else{
 					timeout = Math.min(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
 				}
-				ErrorPrinter.print("Socket Timed Out, waiting " + timeout + " seconds before retrying.");
+				ErrorPrinter.print("Socket Timed Out, waiting " + time + " seconds before retrying.");
 			}
 		}
 	}

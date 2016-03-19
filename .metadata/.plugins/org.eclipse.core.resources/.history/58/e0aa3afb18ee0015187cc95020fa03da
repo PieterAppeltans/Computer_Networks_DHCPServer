@@ -73,7 +73,7 @@ public class IPAddressKeeper {
 			Random rand = new Random();
 			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
-			System.arraycopy(temp, 0, result, maxMaskValue+1, result.length - (maxMaskValue+1));
+			System.arraycopy(temp, 0, result, maxMaskValue, result.length);
 			counter++;
 		}
 		if (counter == 50){
@@ -305,10 +305,11 @@ public class IPAddressKeeper {
 	 * 				The map of IP addresses to print.
 	 */
 	private void printIPMap(Map<InetAddress,Object[]> map){
+		System.out.println(map.toString());
 		for (InetAddress address:map.keySet()){
 			byte[] chaddr = (byte[]) map.get(address)[0];
-			LocalDateTime localTime = (LocalDateTime) map.get(address)[1];
-			System.out.println(address.toString()+" Leaser: "+Arrays.toString(chaddr)+" Until: "+localTime.toString());
+			LocalDateTime localTime = (LocalDateTime) leasedIP.get(address)[1];
+			System.out.println(address.toString()+chaddr.toString()+localTime.toString());
 		}
 	}
 	
