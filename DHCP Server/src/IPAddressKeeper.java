@@ -1,11 +1,26 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
 public class IPAddressKeeper {
+	
+	/**
+	 * Constructor for an IP address keeper used to keep track of the available and leased IPs of a DHCPServer.
+	 * 
+	 * @param 	start
+	 * 				The start address of the range of addresses the server can distribute.
+	 * @param 	end
+	 * 				The end address of the range of addresses the server can distribute.
+	 * @param 	mask
+	 * 				The fixed upper bytes of the range of addresses the server can distribute.
+	 * @param 	defaultLeaseTime
+	 * 				The default lease time offered to a client by the server.
+	 * @param 	maxLeaseTime
+	 * 				The maximal lease time offered to a client by the server.
+	 * @param 	minLeaseTime
+	 * 				The minimal lease time offered to a client by the server.
+	 */
 	public IPAddressKeeper(byte[] start,byte[] end,byte[] mask,int defaultLeaseTime,int maxLeaseTime,int minLeaseTime){
 		this.start = start;
 		this.end = end;
@@ -14,6 +29,7 @@ public class IPAddressKeeper {
 		this.maxLeaseTime = maxLeaseTime;
 		this.minLeaseTime = minLeaseTime;
 	}
+	
 	private byte[] start;
 	private byte[] end;
 	private byte[] mask;
@@ -22,10 +38,13 @@ public class IPAddressKeeper {
 	private int minLeaseTime;
 	private Map<InetAddress,Object[]> leasedIP = new Hashtable<InetAddress, Object[]>();
 	private Map<InetAddress,Object[]> offeredIP = new Hashtable<InetAddress,Object[]>();
+	
 	/**
-	 * A method that generate a new InetAddress based on the client identifier
-	 * @param clientIdentifier Unique client identifier, used to try to give the same client the same InetAddress if available
-	 * @return
+	 * A method that generates a new InetAddress based on the client identifier.
+	 * 
+	 * @param 	clientIdentifier 
+	 * 				Unique client identifier, used to try to give the same client the same InetAddress if available.
+	 * @return	A InetAddress that's available for leasing.
 	 */
 	public InetAddress generateNewInetAddress (byte[] clientIdentifier){
 		byte[] result = new byte[4];
@@ -64,6 +83,14 @@ public class IPAddressKeeper {
 			return null;
 		}
 	}
+	
+	/**
+	 * Returns whether or not an IP address is currently being offered to a client.
+	 * 
+	 * @param 	ipaddr
+	 * 				The IP address to check.	
+	 * @return	A boolean representing if the IP address is currently being offered to a client.
+	 */
 	private boolean inOffer(byte[] ipaddr) {
 		try {
 			InetAddress inetaddress = InetAddress.getByAddress(ipaddr);
@@ -71,12 +98,15 @@ public class IPAddressKeeper {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			return false;
-		}
-		
+		}	
 	}
+	
 	/**
+	 * Returns whether or not an IP address is in range of the available address range of the server.
 	 * 
-	 * @return
+	 * @param 	ipaddr
+	 * 				The IP address to check.
+	 * @return	A boolean representing if the IP address is in range of the available address range of the server.
 	 */
 	public boolean inRange(byte[] ipaddr){
 		if (ipaddr.length != 4){
@@ -92,6 +122,14 @@ public class IPAddressKeeper {
 		}
 		return true;
 	}
+	
+	/**
+	 * Returns whether or not an IP address is currently in use, i.e. it's being leased to a client.
+	 * 
+	 * @param 	ipaddr
+	 * 				The IP address to check.
+	 * @return	A boolean representing if the IP address is currently in use, i.e. it's being leased to a client.
+	 */
 	public boolean inUse(byte[] ipaddr){
 		InetAddress inetaddress;
 		try {
@@ -102,6 +140,16 @@ public class IPAddressKeeper {
 		}
 		return leasedIP.containsKey(inetaddress);
 	}
+	
+	/**
+	 * Returns whether or not the given client currently has a lease on the given IP address.
+	 * 
+	 * @param 	clientIdentifier
+	 * 				The unique client identifier to check.
+	 * @param 	IP
+	 * 				The IP address to check.
+	 * @return	A boolean representing if the given client currently has a lease on the given IP address.
+	 */
 	public boolean hasIP(byte[]clientIdentifier,byte[] IP){
 		InetAddress inetaddress;
 		try {
@@ -112,30 +160,53 @@ public class IPAddressKeeper {
 		}
 		return Arrays.equals(clientIdentifier,(byte[])leasedIP.get(inetaddress)[0]);
 	}
+	
 	/**
-	 * Adding a new lease to the map leasedIP
-	 * @param ipaddress The address which is leased
-	 * @param clientIdentifier A unique client identifier
-	 * @param endOfLease Time at which lease expires
+	 * Adding a new lease to a client.
+	 * 
+	 * @param 	ipaddress
+	 * 				The address which is leased.
+	 * @param 	clientIdentifier
+	 * 				A unique client identifier.
+	 * @param 	leaseDuration
+	 * 				The duration of the lease.
 	 */
-	public void addNewLease(byte[] ipaddress, byte[] clientIdentifier,int endOfLease){
+	public void addNewLease(byte[] ipaddress, byte[] clientIdentifier,int leaseDuration){
 		this.removeOffer(ipaddress);
 		try {
-			leasedIP.put(InetAddress.getByAddress(ipaddress),new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)endOfLease)});
+			leasedIP.put(InetAddress.getByAddress(ipaddress),new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)leaseDuration)});
 		} catch (UnknownHostException e) {
 			ErrorPrinter.print("The illegal IP address" + ipaddress.toString() + " was not added");
 		}
 	}
-	public void updateLease(byte[] ipaddress,int newEndOfLease){
+	
+	/**
+	 * Updating a lease of a client.
+	 * 
+	 * @param 	ipaddress
+	 * 				The address which is leased.
+	 * @param 	newLeaseDuration
+	 * 				The duration of the new lease.
+	 */
+	public void updateLease(byte[] ipaddress,int newLeaseDuration){
 		InetAddress inetaddress;
 		try {
 			inetaddress = InetAddress.getByAddress(ipaddress);
-			leasedIP.get(inetaddress)[1] = LocalDateTime.now().plusSeconds(newEndOfLease);
+			leasedIP.get(inetaddress)[1] = LocalDateTime.now().plusSeconds(newLeaseDuration);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
 		
 	}
+	
+	/**
+	 * Adding a new offer to a client.
+	 * 
+	 * @param 	ipaddress
+	 * 				The address which is offered.
+	 * @param 	clientIdentifier
+	 * 				A unique client identifier.
+	 */
 	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){
 		try {
 			InetAddress inetaddress = InetAddress.getByAddress(ipaddress);
@@ -145,6 +216,13 @@ public class IPAddressKeeper {
 		}
 		
 	}
+	
+	/**
+	 * Removing an offered IP address from the offered addresses by the server.
+	 * 
+	 * @param 	toBeRemoved
+	 * 				The address which is to be removed from the offered addresses by the server.
+	 */
 	public void removeOffer(byte[] toBeRemoved){
 		try {
 			InetAddress inetaddress = InetAddress.getByAddress(toBeRemoved);
@@ -153,26 +231,46 @@ public class IPAddressKeeper {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Removing an offered IP address to a given client from the offered addresses by the server.
+	 * 
+	 * @param 	clientIdentifier
+	 * 				A unique client identifier.
+	 */
 	public void removeOfferByClientIdentifier(byte[] clientIdentifier){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length;i>=0;i--){
-			InetAddress key = keys[i];
-			byte[] chaddr = (byte[]) offeredIP.get(key)[0];
+		Set<InetAddress> keys = offeredIP.keySet();
+		InetAddress[] addresses = keys.toArray(new InetAddress[keys.size()]);
+		for (int i=addresses.length-1;i>=0;i--){
+			InetAddress address = addresses[i];
+			byte[] chaddr = (byte[]) offeredIP.get(address)[0];
 			if (Arrays.equals(chaddr,clientIdentifier)){
-				offeredIP.remove(key);
+				offeredIP.remove(address);
 			}
 		}
 	}
-	public void removeExpiredOffer(){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length;i>=0;i--){
-			InetAddress key = keys[i];
-			LocalDateTime endOfLease = (LocalDateTime) offeredIP.get(key)[1];
+	
+	/**
+	 * Remove offered IP addresses when their lease expire.
+	 */
+	public void removeExpiredOffers(){
+		Set<InetAddress> keys = offeredIP.keySet();
+		InetAddress[] addresses = keys.toArray(new InetAddress[keys.size()]);
+		for (int i=addresses.length-1;i>=0;i--){
+			InetAddress address = addresses[i];
+			LocalDateTime endOfLease = (LocalDateTime) offeredIP.get(address)[1];
 			if (endOfLease.isBefore(LocalDateTime.now())){
-				offeredIP.remove(key);
+				offeredIP.remove(address);
 			}
 		}
 	}
+	
+	/**
+	 * Removing a leased IP address from the leased addresses by the server.
+	 * 
+	 * @param 	toBeRemoved
+	 * 				The address which is to be removed from the leased addresses by the server.
+	 */
 	public void removeLease(byte[] toBeRemoved){
 		InetAddress inetaddress;
 		try {
@@ -181,21 +279,29 @@ public class IPAddressKeeper {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-		
 	}
+	
 	/**
-	 * Method that remove every expired lease (id LocalDateTime.now() > endOfLease) in the map leasedIP. 
+	 * Method that removes every expired lease (i.e. LocalDateTime.now() > endOfLease) in the map leasedIP. 
 	 */
 	public void removeExpiredLeases(){
-		InetAddress[] keys = (InetAddress[]) leasedIP.keySet().toArray();
-		for (int i=keys.length; i>= 0;i--) {
-			InetAddress key = keys[i];
-			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(key)[1];
+		Set<InetAddress> keys = leasedIP.keySet();
+		InetAddress[] addresses = keys.toArray(new InetAddress[keys.size()]);
+		for (int i=addresses.length-1; i>= 0;i--) {
+			InetAddress address = addresses[i];
+			LocalDateTime endOfLease = (LocalDateTime) leasedIP.get(address)[1];
 			if (endOfLease.isBefore(LocalDateTime.now())){
-				removeLease(key.getAddress());
+				removeLease(address.getAddress());
 			}
-		}
+		}	
 	}
+	
+	/**
+	 * Prints the IP addresses, along with the client identifier and the end of the lease, of the given map.
+	 * 
+	 * @param	map
+	 * 				The map of IP addresses to print.
+	 */
 	private void printIPMap(Map<InetAddress,Object[]> map){
 		for (InetAddress address:map.keySet()){
 			byte[] chaddr = (byte[]) leasedIP.get(address)[0];
@@ -203,21 +309,48 @@ public class IPAddressKeeper {
 			System.out.println(address.toString()+chaddr.toString()+localTime.toString());
 		}
 	}
+	
+	/**
+	 * Prints all the leased IP addresses.
+	 */
 	public void printLeasedIP(){
 		System.out.println("----------------Leased IP---------------------");
 		printIPMap(this.leasedIP);
 	}
+	
+	/**
+	 * Prints all the offered IP addresses.
+	 */
 	public void printOfferedIP(){
 		System.out.println("----------------Offered IP---------------------");
 		printIPMap(this.offeredIP);
 	}
+	
+	/**
+	 * Returns the default lease time offered by the server.
+	 * 
+	 * @return	A long representing the default lease time offered by the server.
+	 */
 	public long getDefaultLeaseTime() {
 		return this.defaultLeaseTime;
 	}
+	
+	/**
+	 * Returns the minimal lease time offered by the server.
+	 * 
+	 * @return	A long representing the minimal lease time offered by the server.
+	 */
 	public long getMinLeaseTime(){
 		return this.minLeaseTime;
 	}
+	
+	/**
+	 * Returns the maximal lease time offered by the server.
+	 * 
+	 * @return	A long representing the maximal lease time offered by the server.
+	 */
 	public long getMaxLeaseTime(){
 		return this.maxLeaseTime;
 	}
+	
 }

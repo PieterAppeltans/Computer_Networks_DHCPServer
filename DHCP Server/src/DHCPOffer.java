@@ -38,5 +38,10 @@ public class DHCPOffer extends DHCPMessage {
 		// DHCP option 6: DNS servers 9.7.10.15, 9.7.10.16, 9.7.10.18			(see Wikipedia)
 		return options;
 	}
+	
+	@Override
+	public String getClassName() {
+		return "DHCPOFFER";
+	}
 
 }

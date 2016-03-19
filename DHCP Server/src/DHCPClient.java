@@ -2,13 +2,9 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
-import java.time.chrono.MinguoChronology;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Map;
 import java.util.Random;
-
-import org.omg.CORBA.TIMEOUT;
 
 public class DHCPClient {
 	
@@ -53,7 +49,6 @@ public class DHCPClient {
 	 */
 	private LocalDateTime leaseTime;
 	
-
 	public void init() {
 		int timeout = 0; 
 		Random rand = new Random();
@@ -75,9 +70,7 @@ public class DHCPClient {
 			}
 			this.xid = rand.nextInt();
 			DHCPMessage message = new DHCPDiscover(xid,this.chaddr,DHCPDiscover.getDefaultOptions());
-			System.out.println("----------------------------------------------------------------------------");
-			System.out.println("Sending Discover message");
-			message.print();
+			message.print(true);
 			byte[] returnMessage = null;
 			try{
 				returnMessage = udpclient.send(message.generateMessage());
@@ -85,9 +78,8 @@ public class DHCPClient {
 			catch (Exception e){
 			}
 			if (returnMessage != null){
-				System.out.println("PARSED RECEIVED MESSAGE:");
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
-				parsedMessage.print();
+				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER 
@@ -128,9 +120,7 @@ public class DHCPClient {
 				catch(Exception e){}
 			}
 			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.chaddr,DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier,20));
-			System.out.println("----------------------------------------------------------------------------");
-			System.out.println("Sending Request message");
-			message.print();
+			message.print(true);
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -140,8 +130,7 @@ public class DHCPClient {
 			}
 			if (returnMessage != null){
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
-				System.out.println("PARSED RECEIVED MESSAGE:");
-				parsedMessage.print();
+				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
@@ -217,17 +206,17 @@ public class DHCPClient {
 	
 	public void release(){
 		if (this.state == DHCPClientState.BOUND){	
-			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress,this.getChaddr(),DHCPRelease.getDefaultOptions());
-			message.print();
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, DHCPClient.getChaddr(),DHCPRelease.getDefaultOptions());
+			message.print(true);
 			byte[] returnMessage = null;
 			try{
-				returnMessage = udpclient.send(message.generateMessage()); // Does the server return anything at all?
+				returnMessage = udpclient.send(message.generateMessage());
 			}	
 			catch (Exception e){
 			}
 			if (returnMessage != null){
 				DHCPMessage mess = MessageParser.parseMessage(returnMessage,312);
-				mess.print();
+				mess.print(false);
 			}
 		}
 	}
@@ -244,7 +233,8 @@ public class DHCPClient {
 				catch(Exception e){}
 			}
 			// This message will be unicast.
-			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions());
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions(null,null,22));
+			message.print(true);
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -258,8 +248,7 @@ public class DHCPClient {
 			    // the network administrator), but should return a DHCPACK message regardless. -> 0 when not extended?
 				
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
-				System.out.println("PARSED RECEIVED MESSAGE:");
-				parsedMessage.print();
+				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
@@ -267,7 +256,6 @@ public class DHCPClient {
 					byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
 					ByteBuffer buf3 = ByteBuffer.wrap(t3);
 					long deltat = toUnsigned(buf3.getInt());
-					System.out.println(deltat);
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
 					if (t1 == null){
@@ -317,6 +305,7 @@ public class DHCPClient {
 			}
 			// This message MUST be broadcast to the 0xffffffff IP broadcast address.
 			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions());
+			message.print(true);
 			byte[] returnMessage = null;
 			LocalDateTime startTime = LocalDateTime.now();
 			try{
@@ -326,8 +315,7 @@ public class DHCPClient {
 			}
 			if (returnMessage != null){			
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
-				System.out.println("PARSED RECEIVED MESSAGE:");
-				parsedMessage.print();
+				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
@@ -368,6 +356,7 @@ public class DHCPClient {
 			}
 		}
 	}
+	
 	/**
 	 * Method that converts a signed int to an unsigned long
 	 * eg -1 = 0xffffffff => 2**32-1 
@@ -380,7 +369,6 @@ public class DHCPClient {
 	
 	public void run(){
 		while (true){
-			
 			if (this.state == DHCPClientState.INIT){ // already gets checked within init()?
 				this.init();
 				this.request();
@@ -394,10 +382,12 @@ public class DHCPClient {
 			}
 		}
 	}
+	
 	/**
 	 * Variable storing the hardware address of this client
 	 */
 	private byte [] chaddr;
+	
 	/**
 	 * A method that gets the hardware address of this client. If this is not available eg. due to no rights a
 	 * random MAC-address is generated.

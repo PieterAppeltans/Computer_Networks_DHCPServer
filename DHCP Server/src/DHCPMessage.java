@@ -31,18 +31,23 @@ public class DHCPMessage {
 	private byte[] giaddr;
 	private byte[] chaddr;
 	private Map<DHCPOption,byte[]> options;
+	
 	public int getXid(){
 		return this.xid;
 	}
+	
 	public byte[] getSiaddr(){
 		return this.siaddr;
 	}
+	
 	public byte[] getChaddr(){
 		return this.chaddr;
 	}
+	
 	public byte[] getYiaddr(){
 		return this.yiaddr;
 	}
+	
 	public Map<DHCPOption,byte[]> getOptionsMap(){
 		return options;
 	}
@@ -108,7 +113,15 @@ public class DHCPMessage {
 		return result;
 	}
 	
-	public void print(){
+	public void print(boolean clientToServer){
+		if (clientToServer){
+			System.out.println("----------------------------------------- CLIENT TO SERVER -----------------------------------------");
+		} else {
+			System.out.println("----------------------------------------- SERVER TO CLIENT -----------------------------------------");
+		}
+		if (this.getClassName() != ""){
+			System.out.println(this.getClassName());
+		}
 		System.out.println("opcode:\t " + opcode);
 		System.out.println("htype:\t " + htype);
 		System.out.println("xid:\t " + xid);
@@ -125,6 +138,7 @@ public class DHCPMessage {
 		    byte[] value = entry.getValue();
 		    System.out.println("\t" + key + "\t" + DHCPMessage.printByteArrayHexa(value));
 		}
+		System.out.println("----------------------------------------------------------------------------------------------------");
 	}
 	
 	public static byte[] magicCookie = {(byte)99,(byte)130,(byte)83,(byte)99};
@@ -147,8 +161,15 @@ public class DHCPMessage {
 		}
 		return builder.toString();
 	}
+	
 	public byte[] getCiaddr() {
 		return this.ciaddr;
+	}
+	
+	public String getClassName() {
+		byte messageType = options.get(DHCPOption.DHCPMESSAGETYPE)[0];
+		System.out.println(DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType));
+		return "";
 	}
 	
 }

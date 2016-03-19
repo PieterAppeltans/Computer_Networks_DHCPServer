@@ -25,4 +25,9 @@ public class DHCPRelease extends DHCPMessage{
 		return options;
 	}
 	
+	@Override
+	public String getClassName() {
+		return "DHCPRELEASE";
+	}
+	
 }
