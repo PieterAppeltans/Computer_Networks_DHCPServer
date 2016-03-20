@@ -1,3 +1,8 @@
+/**
+ * Enumeration containing the possible Hardware types.
+ * @author Pieter Appeltans & Hans Cauwenbergh
+ *
+ */
 public enum DHCPHtype {
 	
 	ETHERNET{
@@ -10,7 +15,10 @@ public enum DHCPHtype {
 		public byte getByte() {
 			return (byte)6;
 		}};
-	
+	/**
+	 * Returning the corresponding byte used in the htype-field of the DHCPMessage.
+	 * @return
+	 */
 	public abstract byte getByte();
 	
 }

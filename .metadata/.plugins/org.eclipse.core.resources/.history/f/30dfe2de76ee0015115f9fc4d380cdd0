@@ -52,8 +52,8 @@ public class DHCPAck extends DHCPMessage {
 	/**
 	 * Return the default options for DHCPAck/ Nak message.
 	 * @param leaseTime 
-	 * @param serverIp Identifier for the server sending this message. Optional in ACK/NAK messages.
-	 * @param acknowledged If true the options for a ACK are returned, if false the options for a NAK are returned
+	 * @param serverIp Identifier for the server sending this message. Optional in
+	 * @param acknowledged
 	 * @return
 	 */
 	public static Map<DHCPOption,byte[]> getDefaultOptions(int leaseTime, byte[] serverIp, boolean acknowledged){
@@ -61,14 +61,13 @@ public class DHCPAck extends DHCPMessage {
 		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
 		if (acknowledged){
 			options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPACK.getByte()});
-			options.put(DHCPOption.IPADDRESSLEASETIME, t);
 		} else {
 			options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPNAK.getByte()});
 		}
 		if (serverIp != null){
 			options.put(DHCPOption.SERVERIDENTIFIER, serverIp);
 		}
-		
+		options.put(DHCPOption.IPADDRESSLEASETIME, t);
 		
 		// EXTRA:
 		// 
@@ -77,9 +76,7 @@ public class DHCPAck extends DHCPMessage {
 		// DHCP option 6: DNS servers 9.7.10.15, 9.7.10.16, 9.7.10.18			(see Wikipedia)
 		return options;
 	}
-	/**
-	 * Return the message type of this message. Either DHCPACK or DHCPNAK.
-	 */
+	
 	@Override
 	public String getClassName() {
 		if (options.get(DHCPOption.DHCPMESSAGETYPE)[0] == DHCPMessageType.DHCPACK.getByte()){

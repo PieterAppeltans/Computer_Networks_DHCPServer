@@ -13,7 +13,6 @@ public class DHCPDiscover extends DHCPMessage {
 	 * @param chaddr 
 	 * 				Client hardware address. Eg. MAC address.
 	 * @param options
-	 * 				Map containing the options for this message. Must include the option DHCPMessageType 
 	 */
 	public DHCPDiscover(int xid,byte[] chaddr, Map<DHCPOption,byte[]> options) {
 		
@@ -30,18 +29,11 @@ public class DHCPDiscover extends DHCPMessage {
 			  options
 			  );
 	}
-	/**
-	 * Get the default options with requestedIP = null
-	 * @return The default options
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(){
 		return DHCPDiscover.getDefaultOptions(null); // no specific IP requested
 	}
-	/**
-	 * Method returning the default options
-	 * @param requestedIP The IP the client want to get from the DHCPServer
-	 * @return The default options given the requested IP.
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] requestedIP){
 		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
 		options.put(DHCPOption.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()});
@@ -54,9 +46,7 @@ public class DHCPDiscover extends DHCPMessage {
 		//  			   Request Subnet Mask (1), Router (3), Domain Name (15), Domain Name Server (6)			(see Wikipedia)
 		return options;
 	}
-	/**
-	 * Method returning the class name of this message. (DHCPDISCOVER)
-	 */
+	
 	@Override
 	public String getClassName() {
 		return "DHCPDISCOVER";

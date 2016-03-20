@@ -77,9 +77,7 @@ public class DHCPAck extends DHCPMessage {
 		// DHCP option 6: DNS servers 9.7.10.15, 9.7.10.16, 9.7.10.18			(see Wikipedia)
 		return options;
 	}
-	/**
-	 * Return the message type of this message. Either DHCPACK or DHCPNAK.
-	 */
+	
 	@Override
 	public String getClassName() {
 		if (options.get(DHCPOption.DHCPMESSAGETYPE)[0] == DHCPMessageType.DHCPACK.getByte()){

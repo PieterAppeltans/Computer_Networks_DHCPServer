@@ -133,9 +133,8 @@ public class DHCPServerThread implements Runnable {
 				DHCPAck returnMessage = new DHCPAck(message.getXid(), message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
 				return returnMessage;
 			} else {
+				DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions(0,this.serverAddress,false));
 				System.out.println("IP in use");
-				return new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions(0,this.serverAddress,false));
-				
 			}
 		}
 		/*

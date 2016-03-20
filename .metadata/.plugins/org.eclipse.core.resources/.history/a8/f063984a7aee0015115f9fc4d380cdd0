@@ -362,7 +362,6 @@ public class DHCPClient {
 				// moves to INIT state.
 				if (this.leaseTime.isBefore(LocalDateTime.now())){
 					this.state = DHCPClientState.INIT;
-					System.out.println("TO INIT STATE");
 				}
 			}
 		}

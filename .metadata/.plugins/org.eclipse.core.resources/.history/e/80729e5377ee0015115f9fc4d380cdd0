@@ -65,14 +65,7 @@ public class DHCPServerThread implements Runnable {
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
 		long leaseTime;
 		if ((IP == null) || !(addressKeeper.inRange(IP) && !addressKeeper.inUse(IP)) ){
-			try{
-				IP = addressKeeper.generateNewInetAddress(message.getChaddr()).getAddress();
-			}
-			catch (NullPointerException e){
-				ErrorPrinter.print("No free IP address could be assigned.");
-				return null;
-			}
-			
+			IP = addressKeeper.generateNewInetAddress(message.getChaddr()).getAddress();
 		}
 		if (t == null){
 			leaseTime = addressKeeper.getDefaultLeaseTime();
@@ -126,7 +119,7 @@ public class DHCPServerThread implements Runnable {
 			return null;
 		}
 		//If the user select this DHCPServer the lease must be added
-		// If successful return ACK else NAK
+		// If successfull return ACK else NAK
 		else if (Arrays.equals(serverIdentifier,this.serverAddress) && IP != null && serverIdentifier != null){
 			if (!addressKeeper.inUse(IP)){ // should still get an IP even when the requested one is in use or none is requested?
 				addressKeeper.addNewLease(IP,message.getChaddr(),(int)leaseTime );
@@ -134,8 +127,6 @@ public class DHCPServerThread implements Runnable {
 				return returnMessage;
 			} else {
 				System.out.println("IP in use");
-				return new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions(0,this.serverAddress,false));
-				
 			}
 		}
 		/*

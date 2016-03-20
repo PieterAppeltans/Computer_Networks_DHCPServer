@@ -6,7 +6,7 @@ import java.util.Map;
  * you have a byte code and you want to know the message type (->) and by creating you have a message type and
  * you want the byte code (<-).
  * 
- * Both the keys and the values must be unique, ie no 2 equal keys and no 2 equal values.
+ * Both the keys and the values must be unique.
  * 
  * @param <K> The class of the key elements.
  * @param <V> The class of the value elements. 

@@ -1,15 +1,11 @@
 import java.util.Hashtable;
 import java.util.Map;
 /**
- * Two way searchable map. You can easy lookup in both directions. In a normal map you can only fast search 
- * in one direction, but in message creating - parsing a bidirectional search is often needed. Eg by parsing
- * you have a byte code and you want to know the message type (->) and by creating you have a message type and
- * you want the byte code (<-).
- * 
- * Both the keys and the values must be unique, ie no 2 equal keys and no 2 equal values.
- * 
- * @param <K> The class of the key elements.
- * @param <V> The class of the value elements. 
+ * Two way searchable map. You can easy lookup in both directions.
+ *
+ *
+ * @param <K> The class of the first key element.
+ * @param <V> The class of the sec
  * @author Pieter Appeltans & Hans Cauwenbergh
  */
 public class BidirectionalMap <K extends Object, V extends Object> {
@@ -17,7 +13,7 @@ public class BidirectionalMap <K extends Object, V extends Object> {
 	  private Map<K,V> forward = new Hashtable<K, V>();
 	  private Map<V,K> backward = new Hashtable<V, K>();
 	  /**
-	   * Add a new key-value pair to the map. The user must make sure that both the value and the key are unique.
+	   * Add a new key-value pair to the map
 	   * @param key The key of the new pair.
 	   * @param value The value of the new pair.
 	   */

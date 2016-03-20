@@ -30,18 +30,11 @@ public class DHCPDiscover extends DHCPMessage {
 			  options
 			  );
 	}
-	/**
-	 * Get the default options with requestedIP = null
-	 * @return The default options
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(){
 		return DHCPDiscover.getDefaultOptions(null); // no specific IP requested
 	}
-	/**
-	 * Method returning the default options
-	 * @param requestedIP The IP the client want to get from the DHCPServer
-	 * @return The default options given the requested IP.
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] requestedIP){
 		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
 		options.put(DHCPOption.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPDISCOVER.getByte()});
