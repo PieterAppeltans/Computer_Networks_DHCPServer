@@ -151,10 +151,16 @@ public class DHCPServerThread implements Runnable {
       replying to the client.
 		 */
 		else if (serverIdentifier == null && IP == null && message.getCiaddr() != null){
-			IP = message.getCiaddr(); // RENEW,REBOUND
-			addressKeeper.updateLease(IP,(int)leaseTime );
-			DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
-			return returnMessage;
+			try{
+				IP = message.getCiaddr(); // RENEW,REBOUND
+				addressKeeper.updateLease(IP,(int)leaseTime );
+				DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
+				return returnMessage;
+			}
+			catch (NullPointerException e){
+				DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,false));
+				return returnMessage;
+			}
 		}
 		System.out.println("other");
 		return null;
@@ -181,6 +187,8 @@ public class DHCPServerThread implements Runnable {
 	 * @return	A DHCP answer message to the received message.
 	 */
 	public DHCPMessage answerMessage(byte[] receivedMessage){
+		addressKeeper.printLeasedIP();
+		addressKeeper.printOfferedIP();
 		addressKeeper.removeExpiredLeases();
 		addressKeeper.removeExpiredOffers();
 		addressKeeper.printLeasedIP();
@@ -193,6 +201,7 @@ public class DHCPServerThread implements Runnable {
 			return processDiscover(parsedMessage);
 		}
 		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPREQUEST ){
+			
 			return processRequest(parsedMessage);
 		}
 		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPRELEASE ){
@@ -202,6 +211,7 @@ public class DHCPServerThread implements Runnable {
 		else{
 			return null;
 		}
+		
 	}
 	
 	/**

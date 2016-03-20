@@ -1,0 +1,70 @@
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+/**
+ * DHCPRequest is send by the DHCPClient to request a given IP address
+ * @author Pieter Appeltans & Hans Cauwenbergh
+ */
+public class DHCPRequest extends DHCPMessage {
+	/**
+	 * Constructor for a new DHCPRelease message
+	 * @param xid 	
+	 * 				Transaction ID, a random number chosen by the client, used by the client and server to associate
+                    	messages and responses between a client and a  server. It must be the be the same as in the 
+                    	servers DHCPOFFER 
+	 * @param ciaddr
+	 * 				Client IP address, must be {0,0,0,0} when no IP assigned. The clients IP in bound, renew or
+	 * 				rebinding state.
+	 * 
+	 * @param chaddr
+	 * 				Client hardware address. Eg. MAC address.
+	 * @param options
+	 * 				Map containing the options for this message. It must include the option DHCPMessageType. 
+	 * 				It must include Requested IP in selecting state, but it must not in bound, renew state. 
+	 * 				It may include a suggested lease time. In selecting state it must include a server identitifier
+	 * 				and it must not in bound, renew or rebound state.
+	 */
+	public DHCPRequest(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOption,byte[]> options) {
+		super(DHCPOpcode.BOOTREQUEST, // opcode
+			  DHCPHtype.ETHERNET, // htype
+			  xid, // xid
+			  (short) 0, // secs
+			  false, // flag
+			  ciaddr, // ciaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // yiaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // giaddr
+			  chaddr,
+			  options
+			  );
+	}
+	
+	public static Map<DHCPOption,byte[]> getDefaultOptions(){
+		return getDefaultOptions(null, null,0);
+	}
+	
+	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] requestedIP, byte[] serverIP,int requestedLeaseTime){
+		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
+		options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPREQUEST.getByte()});
+		if (requestedIP != null){
+			options.put(DHCPOption.REQUESTEDIPADDRESS,requestedIP);
+		}
+		if (serverIP != null){
+			options.put(DHCPOption.SERVERIDENTIFIER, serverIP);
+		}
+		if (requestedLeaseTime != 0){
+			ByteBuffer b = ByteBuffer.allocate(4);
+			b.putInt(requestedLeaseTime);
+			options.put(DHCPOption.IPADDRESSLEASETIME, b.array());
+		}
+		return options;
+	}
+	/**
+	 * Returning the name of this class ("DHCPREQUEST")
+	 */
+	@Override
+	public String getClassName() {
+		return "DHCPREQUEST";
+	}
+	
+}

@@ -1,0 +1,78 @@
+import java.io.IOException;
+import java.net.*;
+
+public class UDPClient {
+	
+	public UDPClient(InetAddress serverIP,int serverPort){
+		this(serverIP,serverPort,576); // default receiveSize = 576
+	}
+	
+	public UDPClient(InetAddress serverIP,int serverPort, int receiveSize){
+		this.serverIP = serverIP;
+		this.serverPort = serverPort;
+		this.receiveSize = receiveSize;
+		try {
+			this.clientSocket =  new DatagramSocket();
+			this.clientSocket.setSoTimeout(10000);
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}  
+	}
+	DatagramSocket clientSocket;
+	/**
+	 * A method to set the size of the receive buffer
+	 * @param size Int, desired new size of the receive buffer
+	 * @post this.receiveSize == size
+	 */
+	public void setReceiveSize(int size){
+		this.receiveSize = size;
+	}
+	
+	/**
+	 * Current value of the receive buffer
+	 */
+	private int receiveSize;
+	
+	/**
+	 * Storing the IP address of the server
+	 */
+	private InetAddress serverIP;
+	
+	/**
+	 * Storing the port to send the UDP message to.
+	 */
+	private int serverPort;
+	
+	/**
+	 * 
+	 * @param sendData
+	 * @throws Exception
+	 */
+	public void send(byte[] sendData) throws Exception{         
+		//byte[] receiveData = new byte[receiveSize];
+		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
+		this.clientSocket.send(sendPacket);
+		//DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+		//clientSocket.receive(receivePacket);
+		//System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
+		//this.clientSocket.close();
+		//return receiveData;
+		}
+	public byte[] receive() {
+		try {
+			byte[] receiveData = new byte[receiveSize];
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			this.clientSocket.receive(receivePacket);
+			//this.clientSocket.close();
+			return receiveData;
+		} catch (IOException e) {
+			return null;
+		}
+		
+	}
+	public void close(){
+		this.clientSocket.close();
+	}
+	
+}

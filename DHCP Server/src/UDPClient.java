@@ -45,11 +45,11 @@ public class UDPClient {
 	private int serverPort;
 	
 	/**
-	 * 
-	 * @param sendData
-	 * @throws Exception
+	 * Send message to the server. 
+	 * @param sendData The message to be send
+	 * @throws IOException When the message couldn't be send.
 	 */
-	public void send(byte[] sendData) throws Exception{         
+	public void send(byte[] sendData) throws IOException{         
 		//byte[] receiveData = new byte[receiveSize];
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
 		this.clientSocket.send(sendPacket);
@@ -59,18 +59,24 @@ public class UDPClient {
 		//this.clientSocket.close();
 		//return receiveData;
 		}
+	/**
+	 * Message that receive data.
+	 * @return Byte array of length receiveSize containing the received bytes. 
+	 */
 	public byte[] receive() {
 		try {
 			byte[] receiveData = new byte[receiveSize];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			this.clientSocket.receive(receivePacket);
-			//this.clientSocket.close();
 			return receiveData;
 		} catch (IOException e) {
 			return null;
 		}
 		
 	}
+	/**
+	 * Method that close the socket.
+	 */
 	public void close(){
 		this.clientSocket.close();
 	}

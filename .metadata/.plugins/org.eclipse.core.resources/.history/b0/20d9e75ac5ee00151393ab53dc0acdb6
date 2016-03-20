@@ -1,0 +1,8 @@
+public class RunDHCPServer {
+	
+	public static void main(String[] args) throws Exception {
+		DHCPServer server = new DHCPServer("server_configuration.txt");
+		server.run();
+	}
+	
+}

@@ -56,11 +56,20 @@ public class MessageParser {
 		}
 		return new DHCPMessage(DHCPbidirectionalMap.OpcodeMap.getBackward(opcode),DHCPbidirectionalMap.HtypeMap.getBackward(htype),xid,secs,(boolean) flag,ciaddr,yiaddr,siaddr,giaddr,chaddr,parsedOptions);
 	}
-	
+	/**
+	 * Method to parse options
+	 * @param options The byte[] array containing the options.
+	 * @return MessageParser.parseOptions(options,true)
+	 */
 	public static Map<DHCPOption,byte[]> parseOptions(byte[] options){
 		return MessageParser.parseOptions(options,true);
 	}
-	
+	/**
+	 * Method that parse a byte[] array to a Map containing the DHCPoptions
+	 * @param options the byte array containing the options
+	 * @param magicCookieNeeded Boolean representing if the magic cookie is needed
+	 * @return A map<DHCPOption,byte[]> containing the option with is value.
+	 */
 	public static Map<DHCPOption,byte[]> parseOptions(byte[] options,boolean magicCookieNeeded){
 		ByteBuffer buf = ByteBuffer.wrap(options);
 		Map<DHCPOption,byte[]> result = new HashMap<DHCPOption, byte[]>();
@@ -68,6 +77,7 @@ public class MessageParser {
 			byte[] magicCookie = new byte[4];
 			buf.get(magicCookie);
 			if (!Arrays.equals(magicCookie,MessageParser.magicCookie)){
+				ErrorPrinter.print("No magic cookie found");
 			}
 		}
 		boolean ended = false;
@@ -85,7 +95,9 @@ public class MessageParser {
 		}
 		return result;
 	}
-	
+	/**
+	 * Storing the magic cookie
+	 */
 	public static byte[] magicCookie = new byte[]{(byte)99,(byte)130,(byte)83,(byte)99};
 	
 }

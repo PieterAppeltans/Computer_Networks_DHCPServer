@@ -1,0 +1,51 @@
+import java.util.HashMap;
+import java.util.Map;
+/**
+ * DHCPRelease is send by the DHCPClient if he want to give up his lease before the lease time has expired.
+ * @author Pieter Appeltans & Hans Cauwenbergh
+ */
+public class DHCPRelease extends DHCPMessage{
+	/**
+	 * Constructor for a new DHCPAck message
+	 * @param xid 	
+	 * 				Transaction ID, a random number chosen by the client, used by the client and server to associate
+                    	messages and responses between a client and a  server. 
+	 * @param ciaddr
+	 * 				Client IP address, for which he want to give up the lease
+	 * @param chaddr
+	 * 				Client hardware address. Eg. MAC address.
+	 * @param options
+	 * 				Map containing the options for this message. It must include the option DHCPMessageType.
+	 */
+	public DHCPRelease(int xid,byte[] ciaddr, byte[] chaddr, Map<DHCPOption,byte[]> options) {
+		super(DHCPOpcode.BOOTREQUEST, // opcode
+			  DHCPHtype.ETHERNET, // htype
+			  xid, // xid
+			  (short) 0, // secs
+			  false, // flag
+			  ciaddr, // ciaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // yiaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // siaddr
+			  new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 }, // giaddr
+			  chaddr,
+			  options
+			  );
+	}
+	/**
+	 * Return the default options for this message type.
+	 * @return 
+	 */
+	public static Map<DHCPOption,byte[]> getDefaultOptions(){
+		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
+		options.put(DHCPOption.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPRELEASE.getByte()});
+		return options;
+	}
+	/**
+	 * Returning the name of this class ("DHCPRELEASE")
+	 */
+	@Override
+	public String getClassName() {
+		return "DHCPRELEASE";
+	}
+	
+}

@@ -44,3 +44,4 @@
 2016-03-18 17:18:12,106 [main] WARN  o.e.r.i.c.r.ChainCompletionProposalComputer - Can't handle %s as class member.
 2016-03-18 17:18:27,417 [main] WARN  o.e.r.i.c.r.ChainCompletionProposalComputer - Can't handle %s as class member.
 2016-03-18 17:51:51,771 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.AllocationExpression as parent of completion location.
+2016-03-20 19:40:10,335 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.IfStatement as parent of completion location.
