@@ -59,17 +59,12 @@ public class MessageParser {
 	/**
 	 * Method to parse options
 	 * @param options The byte[] array containing the options.
-	 * @return MessageParser.parseOptions(options,true)
+	 * @return
 	 */
 	public static Map<DHCPOption,byte[]> parseOptions(byte[] options){
 		return MessageParser.parseOptions(options,true);
 	}
-	/**
-	 * Method that parse a byte[] array to a Map containing the DHCPoptions
-	 * @param options the byte array containing the options
-	 * @param magicCookieNeeded Boolean representing if the magic cookie is needed
-	 * @return A map<DHCPOption,byte[]> containing the option with is value.
-	 */
+	
 	public static Map<DHCPOption,byte[]> parseOptions(byte[] options,boolean magicCookieNeeded){
 		ByteBuffer buf = ByteBuffer.wrap(options);
 		Map<DHCPOption,byte[]> result = new HashMap<DHCPOption, byte[]>();

@@ -38,20 +38,11 @@ public class DHCPRequest extends DHCPMessage {
 			  options
 			  );
 	}
-	/**
-	 * Method returning the default options for DHCPRequest message.
-	 * @return
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(){
 		return getDefaultOptions(null, null,0);
 	}
-	/**
-	 * Method returning the default options for DHCPRequest message
-	 * @param requestedIP Needed in selecting state, not in bound/renew state.
-	 * @param serverIP Needed in selecting state, not in bound/renew state.
-	 * @param requestedLeaseTime It may include a suggested lease time.
-	 * @return
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(byte[] requestedIP, byte[] serverIP,int requestedLeaseTime){
 		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
 		options.put(DHCPOption.DHCPMESSAGETYPE, new byte[] {DHCPMessageType.DHCPREQUEST.getByte()});

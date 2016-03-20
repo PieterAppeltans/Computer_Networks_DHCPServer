@@ -20,19 +20,19 @@ public class DHCPClient {
 	 */
 	private DHCPClientState state;
 	/**
-	 * 
+	 *
 	 */
 	private byte[] serverIdentifier;
 	/**
-	 * Storing the offered address 
+	 * 
 	 */
 	private byte[] offeredAddress;
 	/**
-	 * Storing the received address.
+	 * 
 	 */
 	private byte[] receivedAddress;
 	/**
-	 * Storing the unique transaction identifier used by the last transsaction
+	 * 
 	 */
 	private int xid;
 	/**
@@ -207,6 +207,7 @@ public class DHCPClient {
 			}
 		}
 	}
+	
 	public void release(){
 		if (this.state == DHCPClientState.BOUND){	
 			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, DHCPClient.getChaddr(),DHCPRelease.getDefaultOptions());

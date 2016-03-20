@@ -60,14 +60,15 @@ public class UDPClient {
 		//return receiveData;
 		}
 	/**
-	 * Message that receive data.
-	 * @return Byte array of length receiveSize containing the received bytes. 
+	 * 
+	 * @return
 	 */
 	public byte[] receive() {
 		try {
 			byte[] receiveData = new byte[receiveSize];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			this.clientSocket.receive(receivePacket);
+			//this.clientSocket.close();
 			return receiveData;
 		} catch (IOException e) {
 			return null;

@@ -6,7 +6,7 @@ import java.util.Map;
  */
 public class DHCPRelease extends DHCPMessage{
 	/**
-	 * Constructor for a new DHCPRelease message
+	 * Constructor for a new DHCPAck message
 	 * @param xid 	
 	 * 				Transaction ID, a random number chosen by the client, used by the client and server to associate
                     	messages and responses between a client and a  server. 
@@ -31,18 +31,13 @@ public class DHCPRelease extends DHCPMessage{
 			  options
 			  );
 	}
-	/**
-	 * Return the default options for this message type.
-	 * @return 
-	 */
+	
 	public static Map<DHCPOption,byte[]> getDefaultOptions(){
 		Map<DHCPOption,byte[]> options = new HashMap<DHCPOption,byte[]>();
 		options.put(DHCPOption.DHCPMESSAGETYPE,new byte[]{DHCPMessageType.DHCPRELEASE.getByte()});
 		return options;
 	}
-	/**
-	 * Returning the name of this class ("DHCPRELEASE")
-	 */
+	
 	@Override
 	public String getClassName() {
 		return "DHCPRELEASE";
