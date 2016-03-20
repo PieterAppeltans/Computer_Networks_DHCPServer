@@ -1,54 +1,64 @@
 /**
- * An enumeration storing the different DHCPMessageType with their byte value.
+ * An enumeration storing the different DHCP message types with their byte value.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
  */
 public enum DHCPMessageType {
 	
-	  DHCPDISCOVER{
+	DHCPDISCOVER{
 		@Override
 		public byte getByte() {
 			return 1;
-		}},
-      DHCPOFFER{
+		}
+	},
+	DHCPOFFER{
 		@Override
 		public byte getByte() {
 			return 2;
-		}},
-      DHCPREQUEST{
+		}
+	},
+	DHCPREQUEST{
 		@Override
 		public byte getByte() {
 			return 3;
-		}},
-      DHCPDECLINE{
+		}
+	},
+	DHCPDECLINE{
 		@Override
 		public byte getByte() {
 			return 4;
-		}},
-	  DHCPACK{
+		}
+	},
+	DHCPACK{
 		@Override
 		public byte getByte() {
 			return 5;
-		}},
-	  DHCPNAK{
+		}
+	},
+	DHCPNAK{
 		@Override
 		public byte getByte() {
 			return 6;
-		}},
-      DHCPRELEASE{
+		}
+	},
+	DHCPRELEASE{
 		@Override
 		public byte getByte() {
 			return 7;
 		}  
-      },
-      DHCPINFORM{
+	},
+	DHCPINFORM{
 		@Override
 		public byte getByte() {
 			return 8;
 		}  	  
-      };
-      /**
-       * Method that returns the byte associated with each message type
-       * @return The byte associated with the given message type.
-       */
-      public abstract byte getByte();
+	};
+
+	/**
+	 * Method that returns the byte associated with each message type.
+	 * 
+	 * @return	The byte associated with the given message type.
+	 */
+	public abstract byte getByte();
       
 }

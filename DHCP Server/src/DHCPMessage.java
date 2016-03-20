@@ -3,6 +3,11 @@ import java.util.Map;
 import java.util.Random;
 import javax.xml.bind.DatatypeConverter;
 
+/**
+ * A DHCP message is sent by a client to a DHCP server or the other way around.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
+ */
 public class DHCPMessage {
 	
 	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,int xid,short secs, boolean flag,
