@@ -152,14 +152,13 @@ public class DHCPServerThread implements Runnable {
 		 */
 		else if (serverIdentifier == null && IP == null && message.getCiaddr() != null){
 			try{
-				IP = message.getCiaddr(); // RENEW,REBOUND
-				addressKeeper.updateLease(IP,(int)leaseTime );
-				DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
-				return returnMessage;
+			IP = message.getCiaddr(); // RENEW,REBOUND
+			addressKeeper.updateLease(IP,(int)leaseTime );
+			DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
+			return returnMessage;
 			}
 			catch (NullPointerException e){
-				DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,false));
-				return returnMessage;
+				
 			}
 		}
 		System.out.println("other");

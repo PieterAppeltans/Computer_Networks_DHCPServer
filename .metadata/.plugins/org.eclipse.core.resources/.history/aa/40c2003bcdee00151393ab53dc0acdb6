@@ -212,7 +212,7 @@ public class IPAddressKeeper {
 	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){
 		try {
 			InetAddress inetaddress = InetAddress.getByAddress(ipaddress);
-			offeredIP.put(inetaddress, new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds(60)});
+			offeredIP.put(inetaddress, new Object[]{ipaddress,LocalDateTime.now().plusSeconds(60)});
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}

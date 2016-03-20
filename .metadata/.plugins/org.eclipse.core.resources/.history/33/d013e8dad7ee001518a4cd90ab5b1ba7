@@ -50,11 +50,12 @@ public class DHCPClient {
 	private LocalDateTime leaseTime;
 	
 	public void init() {
+		int timeout = 0; 
 		Random rand = new Random();
 		while (state == DHCPClientState.INIT){
-			if (this.tt != 0){				
+			if (timeout != 0){				
 				try{
-					Thread.sleep(this.tt*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
+					Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
 				}
 				catch(Exception e){
 					

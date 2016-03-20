@@ -1,0 +1,140 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+/**
+ * DHCPServer class.
+ * @author Pieter Appeltans & Hans Cauwenbergh
+ */
+public class DHCPServer {
+	
+	/**
+	 * Constructor for a DHCPServer which is configured according to the specifications provided in a .txt file.
+	 * 
+	 * @param 	configurationAddress
+	 * 				The relative path to the configuration .txt file for the server.
+	 */
+	public DHCPServer(String configurationAddress){
+		try{
+			this.processConfigurationFile(configurationAddress);
+		}
+		catch (IOException e){
+			ErrorPrinter.print("Configuration File not found, using default set up");
+			this.addressKeeper = new IPAddressKeeper(new byte[] {0,0,0,2}, new byte[] {0,0,0,(byte)255}, new byte[] {(byte)192,(byte)168,(byte)1,(byte)0}, 100, 1000, 10);
+		}		
+	}
+	
+	/**
+	 * Constructor for a DHCPServer which is configured by manually entering values for the according fields.
+	 * 
+	 * @param 	port
+	 * 				The port on which the server will be listening.
+	 * @param 	start
+	 * 				The start address of the range of addresses the server can distribute.
+	 * @param 	end
+	 * 				The end address of the range of addresses the server can distribute.
+	 * @param 	mask
+	 * 				The fixed upper bytes of the range of addresses the server can distribute.
+	 * @param 	defaultLeaseTime
+	 * 				The default lease time offered to a client by the server.
+	 * @param 	maxLeaseTime
+	 * 				The maximal lease time offered to a client by the server.
+	 * @param 	minLeaseTime
+	 * 				The minimal lease time offered to a client by the server.
+	 */
+	public DHCPServer(int port,byte[] start,byte[] end, byte[] mask,int defaultLeaseTime,int maxLeaseTime,int minLeaseTime){
+		this.port = port;
+		this.addressKeeper = new IPAddressKeeper(start, end, mask, defaultLeaseTime, maxLeaseTime, minLeaseTime);
+	} 
+
+	/**
+	 * Configure the server according to the specifications provided in a .txt file.
+	 * 
+	 * @param 	configurationAddress
+	 * 				The relative path to the configuration .txt file for the server.
+	 * @throws 	IOException
+	 */
+	private void processConfigurationFile(String configurationAddress) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(configurationAddress));
+		Map<String,String> options = new HashMap<String,String>();
+		try {
+		    String line = br.readLine();
+		    while (line != null) {
+		    	String[] parsedLine =  line.split(":");
+		    	options.put(parsedLine[0], parsedLine[1]);
+		    	line = br.readLine();
+		    }
+		}
+		finally {
+		    br.close();
+		}
+		this.port = Integer.parseInt(options.get("PORT"));
+		InetAddress startIP = InetAddress.getByName(options.get("START"));
+		byte[] start = startIP.getAddress();
+		InetAddress endIP = InetAddress.getByName(options.get("END"));
+		byte[] end = endIP.getAddress();
+		InetAddress maskIP = InetAddress.getByName(options.get("MASK"));
+		byte[] mask = maskIP.getAddress();
+		int defaultLeaseTime = Integer.parseInt(options.get("DEFAULTLEASETIME"));
+		int maxLeaseTime = Integer.parseInt(options.get("MAXLEASETIME"));
+		int minLeaseTime = Integer.parseInt(options.get("MINLEASETIME"));
+		this.addressKeeper = new IPAddressKeeper(start, end, mask, defaultLeaseTime, maxLeaseTime, minLeaseTime);
+		this.numberOfThreads = Integer.parseInt(options.get("THREADS"));
+	}
+
+	/**
+	 * Run the server. numberOfThreads separate threads are running simultaneously.
+	 * 
+	 * @throws 	Exception
+	 */
+	public void run() throws Exception{
+		ExecutorService executor = Executors.newFixedThreadPool(this.numberOfThreads);
+		DatagramSocket serverSocket = new DatagramSocket(this.port);
+		byte[] receiveData = new byte[this.bufferSize];
+		while(true){                   
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			serverSocket.receive(receivePacket);
+			//System.out.println("RECEIVED FROM CLIENT:\t" + DHCPMessage.printByteArrayHexa(receiveData));
+			Runnable thread = new DHCPServerThread(serverSocket,receivePacket,this.addressKeeper,InetAddress.getByName("localhost").getAddress());
+			executor.execute(thread);
+		}
+	}
+	
+	/**
+	 * Returns the buffer size of the server. This is the maximal size of a message sent to the server.
+	 * 
+	 * @return	The buffer size of the server as an integer.
+	 */
+	public int getBufferSize(){
+		return this.bufferSize;
+	}
+	
+	/**
+	 * Sets the buffer size of the server. This is the maximal size of a message sent to the server.
+	 * 
+	 * @param 	buffersize
+	 * 				An integer representing the buffer size of the server.
+	 */
+	public void setBufferSize(int buffersize){
+		this.bufferSize = buffersize;
+	}
+	
+	private IPAddressKeeper addressKeeper;
+	/**
+	 * Storing the number of bytes that must be received.
+	 */
+	private int bufferSize = 576;
+	/**
+	 * The port at which the server socket is running. 
+	 */
+	private int port = 9000;
+	/**
+	 * The size of the thread pool
+	 */
+	private int numberOfThreads = 5;
+	
+}

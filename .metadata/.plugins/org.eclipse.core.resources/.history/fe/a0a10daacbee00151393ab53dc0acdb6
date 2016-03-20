@@ -50,11 +50,12 @@ public class DHCPClient {
 	private LocalDateTime leaseTime;
 	
 	public void init() {
+		int timeout = 0; 
 		Random rand = new Random();
 		while (state == DHCPClientState.INIT){
-			if (this.tt != 0){				
+			if (timeout != 0){				
 				try{
-					Thread.sleep(this.tt*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
+					Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
 				}
 				catch(Exception e){
 					
@@ -70,11 +71,10 @@ public class DHCPClient {
 			this.xid = rand.nextInt();
 			DHCPMessage message = new DHCPDiscover(xid,this.chaddr,DHCPDiscover.getDefaultOptions());
 			message.print(true);
-			//byte[] returnMessage = null;
+			byte[] returnMessage = null;
 			try{
 				udpclient.send(message.generateMessage());
 				//returnMessage = udpclient.receive();
-				this.state = DHCPClientState.SELECTING;
 			}	
 			catch (Exception e){
 			}
@@ -99,7 +99,7 @@ public class DHCPClient {
 						timeout = Math.min(timeout*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
 					}
 				}
-			}
+			}*/
 			else{
 				
 				if (timeout == 0){
@@ -110,17 +110,14 @@ public class DHCPClient {
 				}
 				ErrorPrinter.print("Socket Timed Out, waiting " + timeout + " seconds before retrying.");
 			}
-		*/	
 		}
 	}
-	private int tt = 0;
 	public void select(){
 		LocalDateTime endSelectTime = LocalDateTime.now().plusSeconds(10);
-		DHCPMessage bestOffer = null;
+		DHCPMessage bestOffer;
 		long bestLeaseTime= 0;
 		while (LocalDateTime.now().isBefore(endSelectTime)){
 			byte[] returnMessage = udpclient.receive();
-			System.out.println("message received.");
 			if (returnMessage != null){
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
 				parsedMessage.print(false);
@@ -129,31 +126,16 @@ public class DHCPClient {
 				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER 
 					&& parsedMessage.getXid() == this.xid ){
 					long leaseTime = toUnsigned(ByteBuffer.wrap(parsedOptions.get(DHCPOption.IPADDRESSLEASETIME)).getInt());
-					if (leaseTime>=bestLeaseTime){
+					if (toUnsigned()>=bestLeaseTime){
 						bestOffer = parsedMessage;
-						bestLeaseTime = leaseTime;
 					}
-				}
+					this.serverIdentifier = parsedMessage.getSiaddr();
+				this.offeredAddress = parsedMessage.getYiaddr();
+				this.state = DHCPClientState.REQUESTING;
+				System.out.println("TO REQUESTING STATE");	
 			}
 		}
-		if (bestOffer != null){
-			this.serverIdentifier = bestOffer.getSiaddr();
-			this.offeredAddress = bestOffer.getYiaddr();
-			this.state = DHCPClientState.REQUESTING;
-			System.out.println("TO REQUESTING STATE");
-			this.tt = 0;
 		}
-		else {
-				if (this.tt == 0){
-					this.tt = 4; // delay before the first retransmission SHOULD be 4 seconds
-				}
-				else{
-					this.tt = Math.min(this.tt*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
-				}
-				this.state = DHCPClientState.INIT;
-				ErrorPrinter.print("Socket Timed Out, waiting " + this.tt + " seconds before retrying.");
-			}
-		
 		
 	}
 	public void request(){
@@ -189,8 +171,8 @@ public class DHCPClient {
 					this.leaseTime = startTime.plusSeconds(deltat);
 					byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
 					if (t1 == null){
-						//this.renewalTime = startTime.plusSeconds(20);
-						this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
+						this.renewalTime = startTime.plusSeconds(20);
+						//this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
 					}
 					else{
 						ByteBuffer buf1 = ByteBuffer.wrap(t1);
@@ -426,15 +408,11 @@ public class DHCPClient {
 			if (this.state == DHCPClientState.INIT){ // already gets checked within init()?
 				this.init();
 				this.select();
-			} 
-			else if (this.state == DHCPClientState.REQUESTING){
-			
 				this.request();
-			}
+			} 
 			else {
 				//System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					System.out.println("Now: "+ LocalDateTime.now());
 					this.renew();
 					//this.release();
 				}		

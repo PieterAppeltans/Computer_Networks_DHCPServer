@@ -159,7 +159,6 @@ public class DHCPServerThread implements Runnable {
 			}
 			catch (NullPointerException e){
 				DHCPAck returnMessage = new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,false));
-				return returnMessage;
 			}
 		}
 		System.out.println("other");

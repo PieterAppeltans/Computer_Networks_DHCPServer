@@ -50,11 +50,12 @@ public class DHCPClient {
 	private LocalDateTime leaseTime;
 	
 	public void init() {
+		int timeout = 0; 
 		Random rand = new Random();
 		while (state == DHCPClientState.INIT){
-			if (this.tt != 0){				
+			if (timeout != 0){				
 				try{
-					Thread.sleep(this.tt*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
+					Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
 				}
 				catch(Exception e){
 					
@@ -70,15 +71,15 @@ public class DHCPClient {
 			this.xid = rand.nextInt();
 			DHCPMessage message = new DHCPDiscover(xid,this.chaddr,DHCPDiscover.getDefaultOptions());
 			message.print(true);
-			//byte[] returnMessage = null;
+			byte[] returnMessage = null;
 			try{
 				udpclient.send(message.generateMessage());
-				//returnMessage = udpclient.receive();
+				returnMessage = udpclient.receive();
 				this.state = DHCPClientState.SELECTING;
 			}	
 			catch (Exception e){
 			}
-			/*
+			
 			if (returnMessage != null){
 				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
 				parsedMessage.print(false);
@@ -110,7 +111,7 @@ public class DHCPClient {
 				}
 				ErrorPrinter.print("Socket Timed Out, waiting " + timeout + " seconds before retrying.");
 			}
-		*/	
+			
 		}
 	}
 	private int tt = 0;
