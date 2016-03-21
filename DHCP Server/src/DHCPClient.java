@@ -6,55 +6,92 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * Class for the DHCP client.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
+ */
 public class DHCPClient {
 	
-	public DHCPClient(InetAddress DHCPServerAdrress,int port){
-		udpclient = new UDPClient(DHCPServerAdrress,port);
+	/**
+	 * Constructor for a DHCP client which communicates to a DHCP server on the given server address and port.
+	 * 
+	 * @param 	DHCPServerAddress
+	 * 				The IP address of the server the DHCP client wants to contact.
+	 * @param	port
+	 * 				The port on which the server is listening.
+	 */
+	public DHCPClient(InetAddress DHCPServerAddress,int port){
+		udpclient = new UDPClient(DHCPServerAddress,port);
 		state = DHCPClientState.INIT;
 		chaddr = getChaddr();
 	}
 	
-	private UDPClient udpclient;
 	/**
-	 * Storing a the current state of this DHCPClient conform the states specified in RF2311
+	 * The associated UDP client.
+	 */
+	private UDPClient udpclient;
+	
+	/**
+	 * The current state of the DHCP client.
 	 */
 	private DHCPClientState state;
+	
 	/**
-	 * 
+	 * The IP address of the server.
 	 */
 	private byte[] serverIdentifier;
+	
 	/**
-	 * Storing the offered address 
+	 * The offered IP address by the server to the client. 
 	 */
 	private byte[] offeredAddress;
+	
 	/**
-	 * Storing the received address.
+	 * The received IP address of the client from the server.
 	 */
 	private byte[] receivedAddress;
+	
 	/**
-	 * Storing the unique transaction identifier used by the last transsaction
+	 * The unique transaction identifier used by the last transaction.
 	 */
 	private int xid;
+	
 	/**
-	 * Storing the time at which the client must tries to extend its lease (cfr. RENEWING STATE)
+	 * The time at which the client must try to extend it's lease (cfr. RENEWING STATE).
 	 */
 	private LocalDateTime renewalTime;
+	
 	/**
-	 * Storing the time at which the client must tries to extend its lease, but instead of unicasting the
-	 * request message to its last known server, it must broadcast it.
+	 * The time at which the client must try to extend it's lease, but instead of unicasting the
+	 * request message to it's last known server, it must broadcast it.
 	 */
 	private LocalDateTime rebindingTime;
+	
 	/**
-	 * Storing the time at which the clients lease ends
+	 * The time at which the client's lease ends.
 	 */
 	private LocalDateTime leaseTime;
 	
+	/**
+	 * Variable storing the hardware address of this client.
+	 */
+	private byte [] chaddr;
+	
+	/**
+	 * TODO: commentary
+	 */
+	private int tt = 0;
+	
+	/**
+	 * TODO: commentary
+	 */
 	public void init() {
 		Random rand = new Random();
 		while (state == DHCPClientState.INIT){
 			if (this.tt != 0){				
 				try{
-					Thread.sleep(this.tt*1000+(long) (rand.nextFloat()*2000-1000)); // why random fluctuation (+- 1s) ?
+					Thread.sleep(this.tt*1000+(long) (rand.nextFloat()*2000-1000));
 				}
 				catch(Exception e){
 					
@@ -113,7 +150,10 @@ public class DHCPClient {
 		*/	
 		}
 	}
-	private int tt = 0;
+	
+	/**
+	 * TODO: commentary
+	 */
 	public void select(){
 		LocalDateTime endSelectTime = LocalDateTime.now().plusSeconds(10);
 		DHCPMessage bestOffer = null;
@@ -122,7 +162,7 @@ public class DHCPClient {
 			byte[] returnMessage = udpclient.receive();
 			System.out.println("message received.");
 			if (returnMessage != null){
-				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // TODO: optionlength?
 				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
@@ -153,9 +193,11 @@ public class DHCPClient {
 				this.state = DHCPClientState.INIT;
 				ErrorPrinter.print("Socket Timed Out, waiting " + this.tt + " seconds before retrying.");
 			}
-		
-		
 	}
+	
+	/**
+	 * TODO: commentary
+	 */
 	public void request(){
 		int timeout = 0; 
 		Random rand = new Random();
@@ -177,7 +219,7 @@ public class DHCPClient {
 			catch (Exception e){
 			}
 			if (returnMessage != null){
-				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // TODO: optionlength?
 				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
@@ -251,27 +293,25 @@ public class DHCPClient {
 			}
 		}
 	}
+	
+	/**
+	 * TODO: commentary
+	 */
 	public void release(){
 		if (this.state == DHCPClientState.BOUND){	
 			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, DHCPClient.getChaddr(),DHCPRelease.getDefaultOptions());
 			message.print(true);
-			byte[] returnMessage = null;
 			try{
-
 				udpclient.send(message.generateMessage());
-				returnMessage = udpclient.receive();// Does the server return anything at all?
-
-
 			}	
 			catch (Exception e){
-			}
-			if (returnMessage != null){
-				DHCPMessage mess = MessageParser.parseMessage(returnMessage,312);
-				mess.print(false);
 			}
 		}
 	}
 	
+	/**
+	 * TODO: commentary
+	 */
 	public void renew(){
 		int timeout = 0;
 		System.out.println("TO RENEWING STATE");
@@ -294,12 +334,10 @@ public class DHCPClient {
 			}	
 			catch (Exception e){
 			}
-			if (returnMessage != null){
-				
+			if (returnMessage != null){		
 				// The server may choose not to extend the lease (as a policy decision by
-			    // the network administrator), but should return a DHCPACK message regardless. -> 0 when not extended?
-				
-				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+			    // the network administrator), but should return a DHCPACK message regardless. -> TODO: 0 when not extended?
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // TODO: optionlength?
 				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
@@ -344,6 +382,9 @@ public class DHCPClient {
 		}
 	}
 	
+	/**
+	 * TODO: commentary
+	 */
 	public void rebind(){
 		int timeout = 0;
 		System.out.println("TO REBINDING STATE");
@@ -367,7 +408,7 @@ public class DHCPClient {
 			catch (Exception e){
 			}
 			if (returnMessage != null){			
-				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // optionlength unknown?
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // TODO: optionlength?
 				parsedMessage.print(false);
 				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
 				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
@@ -412,18 +453,22 @@ public class DHCPClient {
 	}
 	
 	/**
-	 * Method that converts a signed int to an unsigned long
-	 * eg -1 = 0xffffffff => 2**32-1 
-	 * @param signed The signed integer to be converted
-	 * @return The unsigned long from which the 4 least significant bytes equals the 4 bytes of the signed int. 
+	 * Method that converts a signed int to an unsigned long (e.g. -1 = 0xffffffff => 2**32-1).
+	 * 
+	 * @param 	signed
+	 * 				The signed integer to be converted.
+	 * @return 	The unsigned long from which the 4 least significant bytes equal the 4 bytes of the signed int. 
 	 */
 	private long toUnsigned(int signed){
 		return (long)(signed) &0x00000000ffffffffL;
 	}
 	
+	/**
+	 * TODO: commentary
+	 */
 	public void run(){
 		while (true){
-			if (this.state == DHCPClientState.INIT){ // already gets checked within init()?
+			if (this.state == DHCPClientState.INIT){
 				this.init();
 				this.select();
 			} 
@@ -432,25 +477,18 @@ public class DHCPClient {
 				this.request();
 			}
 			else {
-				//System.out.println("Renal Time: " + this.renewalTime.toString());
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					System.out.println("Now: "+ LocalDateTime.now());
 					this.renew();
-					//this.release();
 				}		
 			}
 		}
 	}
 	
 	/**
-	 * Variable storing the hardware address of this client
-	 */
-	private byte [] chaddr;
-	
-	/**
-	 * A method that gets the hardware address of this client. If this is not available eg. due to no rights a
-	 * random MAC-address is generated.
-	 * @return A MAC-address if possible the one of the client PC else a random MAC like address.
+	 * A method that gets the hardware address of this client. If this is not available, due to insufficient permissions,
+	 * a random MAC-address is generated.
+	 * 
+	 * @return 	A MAC-address, if possible the one of the client's PC or else a random MAC like address.
 	 */
 	public static byte[] getChaddr(){
 		try{
@@ -465,10 +503,9 @@ public class DHCPClient {
 			System.arraycopy(empty, 0, chaddr, 6, 10);
 			return chaddr;
 		}
-		// If it's not possible to get the MAC a random one is generated.
 		catch (Exception e){
 			Random rand = new Random();
-			byte[] mac = new byte[6]; // random fixed mac address
+			byte[] mac = new byte[6];
 			rand.nextBytes(mac);
 			byte[] chaddr = new byte[16];
 			byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,

@@ -10,6 +10,33 @@ import javax.xml.bind.DatatypeConverter;
  */
 public class DHCPMessage {
 	
+	/**
+	 * Constructor for a new DHCP message.
+	 * 
+	 * @param 	opcode
+	 * 				Code indicating the message type. The message is either a request or a reply.
+	 * @param 	htype
+	 * 				Hardware address type.
+	 * @param 	xid
+	 * 				Transaction ID, a random number chosen by the client, used by the client and server to associate
+     *              messages and responses between a client and a server.
+	 * @param 	secs
+	 * 				Filled in by client, seconds elapsed since client began address acquisition or renewal process.
+	 * @param 	flag
+	 * 				Boolean indicating whether the message should be broadcast.
+	 * @param 	ciaddr
+	 * 				Client IP address.
+	 * @param	yiaddr
+	 * 				The IP address that's leased by the server to a client.
+	 * @param 	siaddr
+	 * 				IP address of next server to use in bootstrap.
+	 * @param 	giaddr
+	 * 				Relay agent IP address.
+	 * @param 	chaddr
+	 * 				Client hardware address (e.g. MAC address).
+	 * @param 	options
+	 * 				Map containing the options for this message.
+	 */
 	public DHCPMessage(DHCPOpcode opcode,DHCPHtype htype,int xid,short secs, boolean flag,
 			byte[] ciaddr,byte[] yiaddr,byte[]siaddr,byte[] giaddr, byte[] chaddr, Map<DHCPOption,byte[]> options){
 		this.opcode = opcode;
@@ -25,45 +52,128 @@ public class DHCPMessage {
 		this.options = options;
 	}
 	
+	/**
+	 * Code indicating the message type. The message is either a request or a reply.
+	 */
 	private DHCPOpcode opcode;
+	
+	/**
+	 * Hardware address type.
+	 */
 	private DHCPHtype htype;
+	
+	/**
+	 * Transaction ID, a random number chosen by the client, used by the client and server to associate
+     * messages and responses between a client and a server.
+	 */
 	private int xid;
+	
+	/**
+	 * Filled in by client, seconds elapsed since client began address acquisition or renewal process.
+	 */
 	private short secs;
+	
+	/**
+	 * Boolean indicating whether the message should be broadcast.
+	 */
 	private boolean flag;
+	
+	/**
+	 * Client IP address.
+	 */
 	private byte[] ciaddr;
+	
+	/**
+	 * The IP address that's leased by the server to a client.
+	 */
 	private byte[] yiaddr;
+	
+	/**
+	 * IP address of next server to use in bootstrap.
+	 */
 	private byte[] siaddr;
+	
+	/**
+	 * Relay agent IP address.
+	 */
 	private byte[] giaddr;
+	
+	/**
+	 * Client hardware address (e.g. MAC address).
+	 */
 	private byte[] chaddr;
+	
+	/**
+	 * Map containing the options for this message.
+	 */
 	private Map<DHCPOption,byte[]> options;
 	
+	/**
+	 * Return the transaction ID of the message.
+	 * 
+	 * @return	An integer representing the transaction ID of the message.
+	 */
 	public int getXid(){
 		return this.xid;
 	}
 	
+	/**
+	 * Return the IP address of the next server to use in bootstrap.
+	 * 
+	 * @return	A byte array representing the IP address of the next server to use in bootstrap.
+	 */
 	public byte[] getSiaddr(){
 		return this.siaddr;
 	}
 	
+	/**
+	 * Return the client hardware address.
+	 * 
+	 * @return	A byte array representing the client hardware address.
+	 */
 	public byte[] getChaddr(){
 		return this.chaddr;
 	}
 	
+	/**
+	 * Return the leased IP address.
+	 * 
+	 * @return	A byte array representing the leased IP address.
+	 */
 	public byte[] getYiaddr(){
 		return this.yiaddr;
 	}
 	
+	/**
+	 * Return the client's IP address.
+	 * 
+	 * @return	A byte array representing the client's IP address.
+	 */
+	public byte[] getCiaddr() {
+		return this.ciaddr;
+	}
+	
+	/**
+	 * Return the options of the message.
+	 * 
+	 * @return	A map containing the DHCP options of the message.
+	 */
 	public Map<DHCPOption,byte[]> getOptionsMap(){
 		return options;
 	}
 	
+	/**
+	 * Generate the DHCP message as an array of bytes.
+	 * 
+	 * @return	An array of bytes representing the DHCP message.
+	 */
 	public byte[] generateMessage(){
 		if (this.xid == 0){
 			// generate random 32-bit identifier
 			Random rand = new Random();
 			this.xid = rand.nextInt();
 		}
-		byte[] result = new byte[576]; // grootte nog aanpassen?
+		byte[] result = new byte[576]; // TODO: 576 as max message?
 		ByteBuffer buf = ByteBuffer.wrap(result);
 		// opcode (1 byte)
 		buf.put(opcode.getByte());
@@ -77,7 +187,7 @@ public class DHCPMessage {
 		buf.putInt(xid);
 		// secs (2 bytes)
 		buf.putShort(secs);
-		// flags (2 bytes, enkel eerste bit zetten)
+		// flags (2 bytes, only set first bit)
 		if (flag){
 			buf.put((byte) 0x80);
 		} else {
@@ -92,13 +202,13 @@ public class DHCPMessage {
 		buf.put(siaddr);
 		// gateway IP address (4 bytes)
 		buf.put(giaddr);
-		// client hardware address (16 bytes) -> waarom 16 bytes ipv 6?
+		// client hardware address (16 bytes)
 		buf.put(chaddr);
 		// server name (64 bytes) and boot filename (128 bytes)
 		for (int i=0;i<(64+128);i++){
 			buf.put((byte)0);
 		} 
-		// Begin option met magic cookie(99.130.83.99) en eindig met end
+		// Begin option with magic cookie (99.130.83.99)
 		buf.put(DHCPMessage.magicCookie);
 		// options
 		for (Map.Entry<DHCPOption, byte[]> entry : options.entrySet()) {
@@ -108,16 +218,17 @@ public class DHCPMessage {
 		    buf.put((byte) value.length);
 		    buf.put(value);
 		}
-		// end
-		buf.put(new byte[]{ (byte) 0xFF });
-		
-		// print the byte array
-		//System.out.println("MESSAGE UNSIGNED INT:\t" + printByteArrayInt(result));
-		//System.out.println("MESSAGE HEXADECIMAL:\t" + printByteArrayHexa(result));
-		
+		// End option with 255
+		buf.put(new byte[]{ (byte) 0xFF });		
 		return result;
 	}
 	
+	/**
+	 * Print the DHCP message in a clear way.
+	 * 
+	 * @param 	clientToServer
+	 * 				A boolean representing if the message was sent from a client to a server or the other way around.
+	 */
 	public void print(boolean clientToServer){
 		if (clientToServer){
 			System.out.println("----------------------------------------- CLIENT TO SERVER -----------------------------------------");
@@ -146,8 +257,18 @@ public class DHCPMessage {
 		System.out.println("----------------------------------------------------------------------------------------------------");
 	}
 	
+	/**
+	 * A byte array (99.130.83.99) used to mark the beginning of the option field.
+	 */
 	public static byte[] magicCookie = {(byte)99,(byte)130,(byte)83,(byte)99};
 	
+	/**
+	 * Transform a byte array to a string containing a sequence of integers.
+	 * 
+	 * @param 	byteArray
+	 * 				The byte array to print.
+	 * @return	A string containing the sequence of integers corresponding to the given bytes in the array.
+	 */
 	public static String printByteArrayInt(byte[] byteArray){
 		StringBuilder builder = new StringBuilder();
 		for (int i=0;i<byteArray.length;i++){
@@ -157,6 +278,13 @@ public class DHCPMessage {
 		return builder.toString();
 	}
 	
+	/**
+	 * Transform a byte array to a string containing a sequence of hexadecimal values.
+	 * 
+	 * @param 	byteArray
+	 * 				The byte array to print.
+	 * @return	A string containing the sequence of hexadecimal values corresponding to the given bytes in the array.
+	 */
 	public static String printByteArrayHexa(byte[] byteArray){
 		String byteString = DatatypeConverter.printHexBinary(byteArray);
 		StringBuilder builder = new StringBuilder();
@@ -167,10 +295,11 @@ public class DHCPMessage {
 		return builder.toString();
 	}
 	
-	public byte[] getCiaddr() {
-		return this.ciaddr;
-	}
-	
+	/**
+	 * Method returning the class name of this message.
+	 * 
+	 * @return	A string containing the message type.
+	 */
 	public String getClassName() {
 		byte messageType = options.get(DHCPOption.DHCPMESSAGETYPE)[0];
 		System.out.println(DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType));

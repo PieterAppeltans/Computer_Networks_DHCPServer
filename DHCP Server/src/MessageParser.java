@@ -2,17 +2,22 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
 /**
- * Class that contains method to parse byte arrays to DHCPMessages
+ * Class used to parse byte arrays to DHCPMessages.
  * 
- *
+ * @author	Pieter Appeltans & Hans Cauwenbergh
  */
 public class MessageParser {
+	
 	/**
-	 * A method that parse a byte array to a DHCP message
-	 * @param message The byte array to be parsed
-	 * @param optionLength The length of the optionfield in number of bytes
-	 * @return A DCHP Message with all the data in the message
+	 * Method that parses a byte array to a DHCP message.
+	 * 
+	 * @param 	message
+	 * 				The byte array to be parsed.
+	 * @param 	optionLength
+	 * 				The length of the option field in number of bytes.
+	 * @return 	A DCHP Message with all the parsed data contained in the message.
 	 */
 	public static DHCPMessage parseMessage(byte[]message,int optionLength){
 		ByteBuffer buf = ByteBuffer.wrap(message);
@@ -56,19 +61,26 @@ public class MessageParser {
 		}
 		return new DHCPMessage(DHCPbidirectionalMap.OpcodeMap.getBackward(opcode),DHCPbidirectionalMap.HtypeMap.getBackward(htype),xid,secs,(boolean) flag,ciaddr,yiaddr,siaddr,giaddr,chaddr,parsedOptions);
 	}
+	
 	/**
-	 * Method to parse options
-	 * @param options The byte[] array containing the options.
-	 * @return MessageParser.parseOptions(options,true)
+	 * Method to parse the options of a DHCP message when the magic cookie is needed.
+	 * 
+	 * @param 	options
+	 *  			The byte array containing the options.
+	 * @return 	MessageParser.parseOptions(options,true)
 	 */
 	public static Map<DHCPOption,byte[]> parseOptions(byte[] options){
 		return MessageParser.parseOptions(options,true);
 	}
+	
 	/**
-	 * Method that parse a byte[] array to a Map containing the DHCPoptions
-	 * @param options the byte array containing the options
-	 * @param magicCookieNeeded Boolean representing if the magic cookie is needed
-	 * @return A map<DHCPOption,byte[]> containing the option with is value.
+	 * Method to parse a byte array to a Map containing the DHCPoptions.
+	 * 
+	 * @param 	options
+	 * 				the byte array containing the options
+	 * @param 	magicCookieNeeded
+	 * 				Boolean representing if the magic cookie is needed.
+	 * @return 	A map<DHCPOption,byte[]> containing the option with it's value.
 	 */
 	public static Map<DHCPOption,byte[]> parseOptions(byte[] options,boolean magicCookieNeeded){
 		ByteBuffer buf = ByteBuffer.wrap(options);
@@ -95,8 +107,9 @@ public class MessageParser {
 		}
 		return result;
 	}
+	
 	/**
-	 * Storing the magic cookie
+	 * A byte array (99.130.83.99) used to mark the beginning of the option field.
 	 */
 	public static byte[] magicCookie = new byte[]{(byte)99,(byte)130,(byte)83,(byte)99};
 	

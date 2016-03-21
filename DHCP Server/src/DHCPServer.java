@@ -6,14 +6,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 /**
- * DHCPServer class.
- * @author Pieter Appeltans & Hans Cauwenbergh
+ * Class for the DHCP server.
+ * 
+ * @author 	Pieter Appeltans & Hans Cauwenbergh
  */
 public class DHCPServer {
 	
 	/**
 	 * Constructor for a DHCPServer which is configured according to the specifications provided in a .txt file.
+	 * If, for whatever reason, this file cannot be read out, the default values for a DHCP server will be used.
 	 * 
 	 * @param 	configurationAddress
 	 * 				The relative path to the configuration .txt file for the server.
@@ -87,7 +90,7 @@ public class DHCPServer {
 	}
 
 	/**
-	 * Run the server. numberOfThreads separate threads are running simultaneously.
+	 * Run the server. The variable numberOfThreads determines how many separate threads are running simultaneously.
 	 * 
 	 * @throws 	Exception
 	 */
@@ -123,17 +126,23 @@ public class DHCPServer {
 		this.bufferSize = buffersize;
 	}
 	
-	private IPAddressKeeper addressKeeper;
 	/**
-	 * Storing the number of bytes that must be received.
+	 * The associated IP address keeper of the DHCP server.
+	 */
+	private IPAddressKeeper addressKeeper;
+	
+	/**
+	 * The number of bytes that can be received.
 	 */
 	private int bufferSize = 576;
+	
 	/**
 	 * The port at which the server socket is running. 
 	 */
 	private int port = 9000;
+	
 	/**
-	 * The size of the thread pool
+	 * The size of the thread pool.
 	 */
 	private int numberOfThreads = 5;
 	

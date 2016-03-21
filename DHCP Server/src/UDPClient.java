@@ -1,12 +1,37 @@
 import java.io.IOException;
 import java.net.*;
 
+/**
+ * Class for the UDP client.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
+ */
 public class UDPClient {
 	
+	/**
+	 * Constructor for a UDP client which communicates to a server on the given server address and port with a
+	 * default receive size of 576 bytes.
+	 * 
+	 * @param 	serverIP
+	 * 				The IP address of the server the client wants to contact.
+	 * @param	serverPort
+	 * 				The port on which the server is listening.
+	 */
 	public UDPClient(InetAddress serverIP,int serverPort){
-		this(serverIP,serverPort,576); // default receiveSize = 576
+		this(serverIP,serverPort,576);
 	}
 	
+	/**
+	 * Constructor for a UDP client which communicates to a server on the given server address and port with a
+	 * given receive size.
+	 * 
+	 * @param 	serverIP
+	 * 				The IP address of the server the client wants to contact.
+	 * @param	serverPort
+	 * 				The port on which the server is listening.
+	 * @param	receiveSize
+	 * 				An integer indicating the desired size of the receive buffer.
+	 */
 	public UDPClient(InetAddress serverIP,int serverPort, int receiveSize){
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
@@ -15,53 +40,57 @@ public class UDPClient {
 			this.clientSocket =  new DatagramSocket();
 			this.clientSocket.setSoTimeout(10000);
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}  
 	}
-	DatagramSocket clientSocket;
+	
 	/**
-	 * A method to set the size of the receive buffer
-	 * @param size Int, desired new size of the receive buffer
-	 * @post this.receiveSize == size
+	 * A method to set the size of the receive buffer.
+	 * 
+	 * @param 	size 
+	 * 				An integer indicating the desired new size of the receive buffer.
 	 */
 	public void setReceiveSize(int size){
 		this.receiveSize = size;
 	}
 	
 	/**
-	 * Current value of the receive buffer
+	 * Current size of the receive buffer.
 	 */
 	private int receiveSize;
 	
 	/**
-	 * Storing the IP address of the server
+	 * The IP address of the server.
 	 */
 	private InetAddress serverIP;
 	
 	/**
-	 * Storing the port to send the UDP message to.
+	 * The port to send the UDP message to.
 	 */
 	private int serverPort;
 	
 	/**
-	 * Send message to the server. 
-	 * @param sendData The message to be send
-	 * @throws IOException When the message couldn't be send.
+     * The DatagramSocket used by the UDP client to send messages to the server.
+     */
+	DatagramSocket clientSocket;
+	
+	/**
+	 * Send message to the server.
+	 * 
+	 * @param 	sendData
+	 * 				The byte array to be sent.
+	 * @throws 	IOException
+	 * 				When the message couldn't be sent.
 	 */
 	public void send(byte[] sendData) throws IOException{         
-		//byte[] receiveData = new byte[receiveSize];
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
 		this.clientSocket.send(sendPacket);
-		//DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-		//clientSocket.receive(receivePacket);
-		//System.out.println("ANSWER FROM SERVER:\t" + DHCPMessage.printByteArrayHexa(receiveData));
-		//this.clientSocket.close();
-		//return receiveData;
 		}
+	
 	/**
-	 * Message that receive data.
-	 * @return Byte array of length receiveSize containing the received bytes. 
+	 * Method to receive a message.
+	 * 
+	 * @return	Byte array of length receiveSize containing the received bytes. 
 	 */
 	public byte[] receive() {
 		try {
@@ -74,8 +103,9 @@ public class UDPClient {
 		}
 		
 	}
+	
 	/**
-	 * Method that close the socket.
+	 * Method that closes the socket.
 	 */
 	public void close(){
 		this.clientSocket.close();

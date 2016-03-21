@@ -4,6 +4,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Class for a IP address keeper, used by a DHCP server.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
+ */
 public class IPAddressKeeper {
 	
 	/**
@@ -31,14 +36,44 @@ public class IPAddressKeeper {
 		this.minLeaseTime = minLeaseTime;
 	}
 	
+	/**
+	 * The start address of the range of addresses the server can distribute.
+	 */
 	private byte[] start;
+	
+	/**
+	 * The end address of the range of addresses the server can distribute.
+	 */
 	private byte[] end;
+	
+	/**
+	 * The fixed upper bytes of the range of addresses the server can distribute.
+	 */
 	private byte[] mask;
+	
+	/**
+	 * The default lease time offered to a client by the server.
+	 */
 	private int defaultLeaseTime;
+	
+	/**
+	 * The maximal lease time offered to a client by the server.
+	 */
 	private int maxLeaseTime;
+	
+	/**
+	 * The minimal lease time offered to a client by the server.
+	 */
 	private int minLeaseTime;
-	// ConcurentHashMap instead of regular HashMap because used in multi-threaded environment.
+	
+	/**
+	 * A concurrent hash map (used in multi-threaded environments) containing all the leased IP addresses.
+	 */
 	private Map<InetAddress,Object[]> leasedIP = new ConcurrentHashMap<InetAddress, Object[]>();
+	
+	/**
+	 * A concurrent hash map (used in multi-threaded environments) containing all the offered IP addresses.
+	 */
 	private Map<InetAddress,Object[]> offeredIP = new ConcurrentHashMap<InetAddress,Object[]>();
 
 	/**
@@ -215,8 +250,7 @@ public class IPAddressKeeper {
 			offeredIP.put(inetaddress, new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds(60)});
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
-		}
-		
+		}	
 	}
 	
 	/**

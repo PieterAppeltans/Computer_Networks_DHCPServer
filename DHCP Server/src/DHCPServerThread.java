@@ -6,12 +6,12 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
+/**
+ * Class for a single DHCP server thread.
+ * 
+ * @author 	Pieter Appeltans & Hans Cauwenbergh
+ */
 public class DHCPServerThread implements Runnable {
-
-	private DatagramSocket serverSocket;
-    private DatagramPacket receivePacket;
-    private IPAddressKeeper addressKeeper;
-    private byte[] serverAddress;
     
     /**
      * Constructor for a single DHCP server thread.
@@ -31,6 +31,26 @@ public class DHCPServerThread implements Runnable {
         this.addressKeeper = addresskeeper;
         this.serverAddress = serverAddress;
     }
+    
+    /**
+     * The DatagramSocket used by the server to send a response to the client.
+     */
+    private DatagramSocket serverSocket;
+    
+    /**
+     * The received DatagramPacket.
+     */
+    private DatagramPacket receivePacket;
+    
+    /**
+     * The associated IPAddressKeeper with the DHCP server.	
+     */
+    private IPAddressKeeper addressKeeper;
+    
+    /**
+     * The address of the DHCP server.
+     */
+    private byte[] serverAddress;
 
     /**
      * Run a single DHCP server thread.
@@ -125,7 +145,7 @@ public class DHCPServerThread implements Runnable {
 			addressKeeper.removeOfferByClientIdentifier(message.getChaddr());
 			return null;
 		}
-		//If the user select this DHCPServer the lease must be added
+		// If the user select this DHCPServer the lease must be added
 		// If successful return ACK else NAK
 		else if (Arrays.equals(serverIdentifier,this.serverAddress) && IP != null && serverIdentifier != null){
 			if (!addressKeeper.inUse(IP)){ // should still get an IP even when the requested one is in use or none is requested?
@@ -162,18 +182,16 @@ public class DHCPServerThread implements Runnable {
 				return returnMessage;
 			}
 		}
-		System.out.println("other");
 		return null;
 	}
 	
 	/**
-	 * Prcoesses a received DHCPRelease message by removing the client's lease on the serverside.
+	 * Processes a received DHCPRelease message by removing the client's lease on the server side.
 	 * 
 	 * @param	message
 	 * 				The received DHCPRelease message.
 	 */
 	private void processRelease(DHCPMessage message){
-		// check if client has IP and then release it.
 		if (addressKeeper.hasIP(message.getChaddr(), message.getCiaddr())){
 			addressKeeper.removeLease(message.getCiaddr());
 		}
