@@ -111,7 +111,7 @@ public class IPAddressKeeper {
 		 */
 		while ((inUse(result) || inOffer(result)) && counter<50){
 			Random rand = new Random();
-			byte[] temp = new byte[result.length];
+			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
 			for (int k = result.length - (maxMaskValue+1);k<result.length;k++){
 				int s2 = (int) start[k] & 0xff;
