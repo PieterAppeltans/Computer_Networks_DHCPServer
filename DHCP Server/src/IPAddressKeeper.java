@@ -366,7 +366,7 @@ public class IPAddressKeeper {
 		for (InetAddress address:map.keySet()){
 			byte[] chaddr = (byte[]) map.get(address)[0];
 			LocalDateTime localTime = (LocalDateTime) map.get(address)[1];
-			System.out.println(address.toString()+" Leaser: "+Arrays.toString(chaddr)+" Until: "+localTime.toString());
+			System.out.println(address.toString()+" Leaser: "+ DHCPMessage.printByteArrayHexa(chaddr) +" Until: "+localTime.toString());
 		}
 	}
 	

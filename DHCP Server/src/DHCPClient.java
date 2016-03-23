@@ -267,7 +267,7 @@ public class DHCPClient {
 			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, DHCPClient.getChaddr(),DHCPRelease.getDefaultOptions());
 			message.print(true);
 			udpclient.send(message.generateMessage());
-			
+			this.state = DHCPClientState.INIT;
 		}
 	}
 	
@@ -444,7 +444,8 @@ public class DHCPClient {
 			}
 			else {
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					this.renew();
+					//this.renew();
+					this.release();
 				}		
 			}
 		}
