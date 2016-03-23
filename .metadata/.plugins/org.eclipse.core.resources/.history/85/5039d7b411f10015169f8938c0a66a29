@@ -173,7 +173,7 @@ public class DHCPMessage {
 			Random rand = new Random();
 			this.xid = rand.nextInt();
 		}
-		byte[] result = new byte[576]; 
+		byte[] result = new byte[576]; // TODO: 576 as max message?
 		ByteBuffer buf = ByteBuffer.wrap(result);
 		// opcode (1 byte)
 		buf.put(opcode.getByte());
