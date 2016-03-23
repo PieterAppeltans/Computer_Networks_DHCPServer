@@ -1,0 +1,8 @@
+import java.net.InetAddress;
+
+
+public class NotAvailable extends Exception{
+	public NotAvailable(InetAddress ip){
+		super("Following IP-address is not available: " + ip.toString());
+	}
+}

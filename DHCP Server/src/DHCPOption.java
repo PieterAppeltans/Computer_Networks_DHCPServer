@@ -46,6 +46,13 @@ public enum DHCPOption {
 		public byte getByte() {
 			return (byte) 54;
 		}
+	},
+	CLIENTIDENTIFIER{
+		@Override
+		public byte getByte() {
+			return (byte) 61;
+		}
+		
 	};
 	
 	

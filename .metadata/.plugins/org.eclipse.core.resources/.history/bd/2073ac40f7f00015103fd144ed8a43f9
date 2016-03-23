@@ -1,0 +1,124 @@
+import java.io.IOException;
+import java.net.*;
+
+/**
+ * Class for the UDP client.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
+ */
+public class UDPClient {
+	
+	/**
+	 * Constructor for a UDP client which communicates to a server on the given server address and port with a
+	 * default receive size of 576 bytes.
+	 * 
+	 * @param 	serverIP
+	 * 				The IP address of the server the client wants to contact.
+	 * @param	serverPort
+	 * 				The port on which the server is listening.
+	 */
+	public UDPClient(InetAddress serverIP,int serverPort){
+		this(serverIP,serverPort,576);
+	}
+	
+	/**
+	 * Constructor for a UDP client which communicates to a server on the given server address and port with a
+	 * given receive size.
+	 * 
+	 * @param 	serverIP
+	 * 				The IP address of the server the client wants to contact.
+	 * @param	serverPort
+	 * 				The port on which the server is listening.
+	 * @param	receiveSize
+	 * 				An integer indicating the desired size of the receive buffer.
+	 */
+	public UDPClient(InetAddress serverIP,int serverPort, int receiveSize){
+		this.serverIP = serverIP;
+		this.serverPort = serverPort;
+		this.receiveSize = receiveSize;
+		try {
+			this.clientSocket =  new DatagramSocket();
+			this.clientSocket.setSoTimeout(1000);
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}  
+	}
+	
+	/**
+	 * A method to set the size of the receive buffer.
+	 * 
+	 * @param 	size 
+	 * 				An integer indicating the desired new size of the receive buffer.
+	 */
+	public void setReceiveSize(int size){
+		this.receiveSize = size;
+	}
+	
+	/**
+	 * Current size of the receive buffer.
+	 */
+	private int receiveSize;
+	
+	/**
+	 * The IP address of the server.
+	 */
+	private InetAddress serverIP;
+	
+	/**
+	 * The port to send the UDP message to.
+	 */
+	private int serverPort;
+	
+	/**
+     * The DatagramSocket used by the UDP client to send messages to the server.
+     */
+	DatagramSocket clientSocket;
+	
+	/**
+	 * Send message to the server.
+	 * 
+	 * @param 	sendData
+	 * 				The byte array to be sent.
+	 * @throws 	IOException
+	 * 				When the message couldn't be sent.
+	 */
+	public void send(byte[] sendData) {         
+		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
+		boolean succesFullySended = false;
+		while (!succesFullySended){
+				try {
+					this.clientSocket.send(sendPacket);
+					succesFullySended = false;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			
+			
+		}
+		}
+	
+	/**
+	 * Method to receive a message.
+	 * 
+	 * @return	Byte array of length receiveSize containing the received bytes. 
+	 */
+	public byte[] receive() {
+		try {
+			byte[] receiveData = new byte[receiveSize];
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			this.clientSocket.receive(receivePacket);
+			return receiveData;
+		} catch (IOException e) {
+			return null;
+		}
+		
+	}
+	
+	/**
+	 * Method that closes the socket.
+	 */
+	public void close(){
+		this.clientSocket.close();
+	}
+	
+}

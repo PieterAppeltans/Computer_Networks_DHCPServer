@@ -83,8 +83,8 @@ public class IPAddressKeeper {
 	 * 				Unique client identifier, used to try to give the same client the same InetAddress if available.
 	 * @return	A InetAddress that's available for leasing.
 	 */
-	public InetAddress generateNewInetAddress (byte[] clientIdentifier){
-		byte[] result = new byte[4];
+	public InetAddress generateNewInetAddress(byte[] clientIdentifier) throws NoIPAvailable {
+		byte[] result = new byte[mask.length];
 		int maxMaskValue = 0;
 		for (int i = 0;i<mask.length;i++){
 			if (mask[i] != 0){
@@ -104,15 +104,25 @@ public class IPAddressKeeper {
 			}
 		}
 		int counter = 0;
+		/*
+		 * If the new generated result is already in use or in offer then a new random address in range is created and
+		 * checks if this is in use or in offer, if this is the case it creates tries a new random address.
+		 * After 50 attempts the server assume there is no IP - address available and gives up. and throws a NoIPAvailable error.
+		 */
 		while ((inUse(result) || inOffer(result)) && counter<50){
 			Random rand = new Random();
 			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
-			System.arraycopy(temp, 0, result, maxMaskValue+1, result.length - (maxMaskValue+1));
+			for (int k = result.length - (maxMaskValue+1);k<result.length;k++){
+				int s2 = (int) start[k] & 0xff;
+				int e2 = (int) end[k] & 0xff;
+				int r = (int) temp[k] & 0xff;
+				result[k] = (byte) ((e2-s2)*(r/255)+s2);
+			}
 			counter++;
 		}
 		if (counter == 50){
-			return null;
+			throw new NoIPAvailable("No available IP could be generated.");
 		}
 		try {
 			return InetAddress.getByAddress(result);
@@ -134,7 +144,7 @@ public class IPAddressKeeper {
 			return offeredIP.containsKey(inetaddress);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
-			return false;
+			return true;
 		}	
 	}
 	
@@ -173,7 +183,7 @@ public class IPAddressKeeper {
 			inetaddress = InetAddress.getByAddress(ipaddr);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
-			return false;
+			return true;
 		}
 		return leasedIP.containsKey(inetaddress);
 	}
@@ -187,7 +197,7 @@ public class IPAddressKeeper {
 	 * 				The IP address to check.
 	 * @return	A boolean representing if the given client currently has a lease on the given IP address.
 	 */
-	public boolean hasIP(byte[]clientIdentifier,byte[] IP){
+	public synchronized boolean hasIP(byte[]clientIdentifier,byte[] IP){
 		InetAddress inetaddress;
 		try {
 			inetaddress = InetAddress.getByAddress(IP);
@@ -207,10 +217,15 @@ public class IPAddressKeeper {
 	 * 				A unique client identifier.
 	 * @param 	leaseDuration
 	 * 				The duration of the lease.
+	 * @throws NotAvailable 
+	 * 				If the the lease that must be add is already in use.
 	 */
-	public void addNewLease(byte[] ipaddress, byte[] clientIdentifier,int leaseDuration){
+	public synchronized void addNewLease(byte[] ipaddress, byte[] clientIdentifier,int leaseDuration) throws NotAvailable{
 		this.removeOffer(ipaddress);
 		try {
+			if (inUse(ipaddress)){
+				throw new NotAvailable(InetAddress.getByAddress(ipaddress));
+			}
 			leasedIP.put(InetAddress.getByAddress(ipaddress),new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds((long)leaseDuration)});
 		} catch (UnknownHostException e) {
 			ErrorPrinter.print("The illegal IP address" + ipaddress.toString() + " was not added");
@@ -225,11 +240,16 @@ public class IPAddressKeeper {
 	 * @param 	newLeaseDuration
 	 * 				The duration of the new lease.
 	 */
-	public void updateLease(byte[] ipaddress,int newLeaseDuration){
+	public synchronized void updateLease(byte[] clientIdentifier,byte[] ipaddress,int newLeaseDuration) throws NotAvailable{
 		InetAddress inetaddress;
 		try {
 			inetaddress = InetAddress.getByAddress(ipaddress);
-			leasedIP.get(inetaddress)[1] = LocalDateTime.now().plusSeconds(newLeaseDuration);
+			if (hasIP(clientIdentifier,ipaddress)){
+				leasedIP.get(inetaddress)[1] = LocalDateTime.now().plusSeconds(newLeaseDuration);
+			}
+			else{
+				throw new NotAvailable(inetaddress);
+			}
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -244,9 +264,13 @@ public class IPAddressKeeper {
 	 * @param 	clientIdentifier
 	 * 				A unique client identifier.
 	 */
-	public void addNewOffer(byte[] ipaddress,byte[] clientIdentifier){
+	public synchronized void addNewOffer(byte[] ipaddress,byte[] clientIdentifier) throws NotAvailable{
+		
 		try {
 			InetAddress inetaddress = InetAddress.getByAddress(ipaddress);
+			if ( (inOffer(ipaddress)||inUse(ipaddress))){
+				throw new NotAvailable(inetaddress);
+			}
 			offeredIP.put(inetaddress, new Object[]{clientIdentifier,LocalDateTime.now().plusSeconds(60)});
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -259,12 +283,12 @@ public class IPAddressKeeper {
 	 * @param 	toBeRemoved
 	 * 				The address which is to be removed from the offered addresses by the server.
 	 */
-	public void removeOffer(byte[] toBeRemoved){
+	public synchronized void removeOffer(byte[] toBeRemoved){
 		try {
 			InetAddress inetaddress = InetAddress.getByAddress(toBeRemoved);
 			offeredIP.remove(inetaddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
+		} catch (UnknownHostException| NullPointerException e) {
+			
 		}
 	}
 	
@@ -279,8 +303,8 @@ public class IPAddressKeeper {
 		InetAddress[] addresses = keys.toArray(new InetAddress[keys.size()]);
 		for (int i=addresses.length-1;i>=0;i--){
 			InetAddress address = addresses[i];
-			byte[] chaddr = (byte[]) offeredIP.get(address)[0];
-			if (Arrays.equals(chaddr,clientIdentifier)){
+			byte[] id = (byte[]) offeredIP.get(address)[0];
+			if (Arrays.equals(id,clientIdentifier)){
 				offeredIP.remove(address);
 			}
 		}
@@ -312,7 +336,7 @@ public class IPAddressKeeper {
 		try {
 			inetaddress = InetAddress.getByAddress(toBeRemoved);
 			leasedIP.remove(inetaddress);
-		} catch (UnknownHostException e) {
+		} catch (UnknownHostException|NullPointerException e) {
 			e.printStackTrace();
 		}
 	}

@@ -1,0 +1,256 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Map;
+
+/**
+ * Class for a single DHCP server thread.
+ * 
+ * @author 	Pieter Appeltans & Hans Cauwenbergh
+ */
+public class DHCPServerThread implements Runnable {
+    
+    /**
+     * Constructor for a single DHCP server thread.
+     * 
+     * @param 	socket
+     * 				The DatagramSocket used to send a response.	
+     * @param 	packet
+     * 				The received DatagramPacket.
+     * @param 	addresskeeper
+     * 				The associated IPAddressKeeper with the DHCP server.	
+     * @param 	serverAddress
+     * 				The address of the DHCP server.
+     */
+    public DHCPServerThread(DatagramSocket socket, DatagramPacket packet,IPAddressKeeper addresskeeper,byte[] serverAddress) {
+        this.serverSocket = socket;
+        this.receivePacket = packet;
+        this.addressKeeper = addresskeeper;
+        this.serverAddress = serverAddress;
+    }
+    
+    /**
+     * The DatagramSocket used by the server to send a response to the client.
+     */
+    private DatagramSocket serverSocket;
+    
+    /**
+     * The received DatagramPacket.
+     */
+    private DatagramPacket receivePacket;
+    
+    /**
+     * The associated IPAddressKeeper with the DHCP server.	
+     */
+    private IPAddressKeeper addressKeeper;
+    
+    /**
+     * The address of the DHCP server.
+     */
+    private byte[] serverAddress;
+
+    /**
+     * Run a single DHCP server thread.
+     */
+    public void run() {
+    	System.out.println(Thread.currentThread().getName() + " started");
+    	InetAddress IPAddress = receivePacket.getAddress(); 
+		int port = receivePacket.getPort();
+		DHCPMessage sendMessage = this.answerMessage(receivePacket.getData());
+		if (sendMessage != null){
+			sendMessage.print(false);
+			byte[] sendData = sendMessage.generateMessage();
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+			try {
+				serverSocket.send(sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}	
+    }
+    
+    /**
+	 * Returns a DHCPOffer message as a response to the received DHCPDiscover message providing 
+	 * 			an offered IP, the server address and a lease time if an IP is available.
+	 * If no NoIPAvailable then null is returned.
+	 * 
+	 * @param 	message
+	 * 				The received DHCPDiscover message.
+	 * @return	A DHCPOffer message as a response to the received DHCPDiscover message.
+	 */
+	private DHCPOffer processDiscover(DHCPMessage message) {
+		Map<DHCPOption,byte[]>options = message.getOptionsMap();
+		
+		/* If the client provide a client identifier the server MUST use that identifier 
+		 * 		to identify the client.  If the client does not provide a 'client identifier' 
+		 * 		option, the server MUST use the contents of the	'chaddr' field to identify the client.
+		 */
+		byte [] clientIdentifier = options.get(DHCPOption.CLIENTIDENTIFIER);
+		if (clientIdentifier == null){
+			clientIdentifier = message.getChaddr();
+		}
+		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
+		long leaseTime = convertLeaseTime(t);
+		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
+		if ((IP == null) || !(addressKeeper.inRange(IP) && !addressKeeper.inUse(IP)) ){
+			try{
+				IP = addressKeeper.generateNewInetAddress(clientIdentifier).getAddress();
+			}
+			// No new IP address could be generated
+			catch (NoIPAvailable e){
+				ErrorPrinter.print("No free IP address could be assigned.");
+				return null;
+			}
+		}
+		
+		try{
+			addressKeeper.addNewOffer(IP, clientIdentifier);
+			return new DHCPOffer(message.getXid(), IP, this.serverAddress,message.getChaddr() , DHCPOffer.getDefaultOptions((int)leaseTime, this.serverAddress));
+		}
+		catch (NotAvailable n){
+			ErrorPrinter.print("Generated IP is no longer available");
+			return null;
+		}
+		
+	}
+	private long convertLeaseTime(byte[] t){
+		if (t == null){
+			return addressKeeper.getDefaultLeaseTime();
+		}
+		else{
+			long leaseTime = toUnsigned(ByteBuffer.wrap(t).getInt());
+			if (leaseTime < addressKeeper.getMinLeaseTime()){
+				return addressKeeper.getMinLeaseTime();
+			}
+			else if (leaseTime > addressKeeper.getMaxLeaseTime()){
+				return addressKeeper.getMaxLeaseTime();
+			}
+			else{
+				return leaseTime;
+			}
+		}
+	}
+	/**
+	 * Returns a DHCPAck message as a response to the received DHCPRequest message providing the client's IP, the server address and a lease time
+	 * or a DHCPNak message if the request is not acknowledged by the server.
+	 * 
+	 * @param 	message
+	 * 				The received DHCPRequest message.
+	 * @return	A DHCPAck or DHCPNak message as a response to the received DHCPRequest message.
+	 */
+	private DHCPAck processRequest(DHCPMessage message){
+		Map<DHCPOption,byte[]>options = message.getOptionsMap();
+		byte[] IP = options.get(DHCPOption.REQUESTEDIPADDRESS);
+		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
+		byte [] clientIdentifier = options.get(DHCPOption.CLIENTIDENTIFIER);
+		if (clientIdentifier == null){
+			clientIdentifier = message.getChaddr();
+		}
+		byte[] serverIdentifier = options.get(DHCPOption.SERVERIDENTIFIER);
+		long leaseTime = convertLeaseTime(t);
+		// If the user has selected another DHCPServer
+		if (serverIdentifier != null && !Arrays.equals(serverIdentifier,this.serverAddress) ){
+			System.out.println("selected other DHCPServer: " + DHCPMessage.printByteArrayInt(serverIdentifier));
+			System.out.println("server on: " + DHCPMessage.printByteArrayInt(this.serverAddress));
+			addressKeeper.removeOfferByClientIdentifier(clientIdentifier);
+			return null;
+		}
+		// If the user select this DHCPServer the lease must be added
+		// If successful return ACK else NAK
+		else if (serverIdentifier != null &&Arrays.equals(serverIdentifier,this.serverAddress) && IP != null ){
+			try{
+				addressKeeper.addNewLease(IP,clientIdentifier,(int)leaseTime );
+				DHCPAck returnMessage = new DHCPAck(message.getXid(), message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
+				return returnMessage;
+			} 
+			catch(NotAvailable e) {
+				ErrorPrinter.print("IP in use :" + IP.toString());
+				return new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions(0,this.serverAddress,false));
+				
+			}
+		}
+		/*
+		 * DHCPREQUEST generated during RENEWING state:
+
+      'server identifier' MUST NOT be filled in, 'requested IP address'
+      option MUST NOT be filled in, 'ciaddr' MUST be filled in with
+      client's IP address. In this situation, the client is completely
+      configured, and is trying to extend its lease. This message will
+      be unicast, so no relay agents will be involved in its
+      transmission.  Because 'giaddr' is therefore not filled in, the
+      DHCP server will trust the value in 'ciaddr', and use it when
+      replying to the client.
+		 */
+		else if (serverIdentifier == null && IP == null && message.getCiaddr() != null){
+			try{
+				IP = message.getCiaddr(); // RENEW,REBOUND
+				addressKeeper.updateLease(clientIdentifier,IP,(int)leaseTime );
+				return new DHCPAck(message.getXid(),message.getCiaddr(), IP, this.serverAddress, message.getChaddr(), DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,true));
+			}
+			catch (NotAvailable e){
+				return new DHCPAck(message.getXid(),message.getCiaddr(),IP,this.serverAddress,message.getChaddr(),DHCPAck.getDefaultOptions((int)leaseTime,this.serverAddress,false));
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Processes a received DHCPRelease message by removing the client's lease on the server side.
+	 * 
+	 * @param	message
+	 * 				The received DHCPRelease message.
+	 */
+	private void processRelease(DHCPMessage message){
+		if (addressKeeper.hasIP(message.getChaddr(), message.getCiaddr())){
+			addressKeeper.removeLease(message.getCiaddr());
+		}
+	}
+	
+	/**
+	 * Generate the appropriate answer to the received DHCP message.
+	 * 
+	 * @param 	receivedMessage
+	 * 				The received DHCP message.
+	 * @return	A DHCP answer message to the received message.
+	 */
+	public DHCPMessage answerMessage(byte[] receivedMessage){
+		addressKeeper.removeExpiredLeases();
+		addressKeeper.removeExpiredOffers();
+		addressKeeper.printLeasedIP();
+		addressKeeper.printOfferedIP();
+		DHCPMessage parsedMessage = MessageParser.parseMessage(receivedMessage, 312);
+		parsedMessage.print(true);
+		Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+		byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+		if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPDISCOVER ){
+			return processDiscover(parsedMessage);
+		}
+		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPREQUEST ){
+			
+			return processRequest(parsedMessage);
+		}
+		else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPRELEASE ){
+			processRelease(parsedMessage);
+			return null;
+		}
+		else{
+			return null;
+		}
+		
+	}
+	
+	/**
+	 * Method that converts a signed int to an unsigned long (e.g. -1 = 0xffffffff => 2**32-1).
+	 * 
+	 * @param 	signed
+	 * 				The signed integer to be converted.
+	 * @return 	The unsigned long from which the 4 least significant bytes equal the 4 bytes of the signed int. 
+	 */
+	private long toUnsigned(int signed){
+		return (long)(signed) &0x00000000ffffffffL;
+	}
+	
+}

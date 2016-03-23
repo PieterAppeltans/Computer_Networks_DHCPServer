@@ -1,0 +1,476 @@
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.Random;
+
+/**
+ * Class for the DHCP client.
+ * 
+ * @author	Pieter Appeltans & Hans Cauwenbergh
+ */
+public class DHCPClient {
+	
+	/**
+	 * Constructor for a DHCP client which communicates to a DHCP server on the given server address and port.
+	 * 
+	 * @param 	DHCPServerAddress
+	 * 				The IP address of the server the DHCP client wants to contact.
+	 * @param	port
+	 * 				The port on which the server is listening.
+	 */
+	public DHCPClient(InetAddress DHCPServerAddress,int port){
+		udpclient = new UDPClient(DHCPServerAddress,port);
+		state = DHCPClientState.INIT;
+		chaddr = getChaddr();
+	}
+	
+	/**
+	 * The associated UDP client.
+	 */
+	private UDPClient udpclient;
+	
+	/**
+	 * The current state of the DHCP client.
+	 */
+	private DHCPClientState state;
+	
+	/**
+	 * The IP address of the server.
+	 */
+	private byte[] serverIdentifier;
+	
+	/**
+	 * The offered IP address by the server to the client. 
+	 */
+	private byte[] offeredAddress;
+	
+	/**
+	 * The received IP address of the client from the server.
+	 */
+	private byte[] receivedAddress;
+	
+	/**
+	 * The unique transaction identifier used by the last transaction.
+	 */
+	private int xid;
+	
+	/**
+	 * The time at which the client must try to extend it's lease (cfr. RENEWING STATE).
+	 */
+	private LocalDateTime renewalTime;
+	
+	/**
+	 * The time at which the client must try to extend it's lease, but instead of unicasting the
+	 * request message to it's last known server, it must broadcast it.
+	 */
+	private LocalDateTime rebindingTime;
+	
+	/**
+	 * The time at which the client's lease ends.
+	 */
+	private LocalDateTime leaseTime;
+	
+	/**
+	 * Variable storing the hardware address of this client.
+	 */
+	private byte [] chaddr;
+	
+	/**
+	 * Variable storing the timeout time for the following time init is executed.
+	 */
+	private int tt = 0;
+	
+	/**
+	 * The user is in the INIT state he must broadcast a DHCPDiscover and go to
+	 * the selecting state.
+	 */
+	public void init() {
+		Random rand = new Random();
+		while (state == DHCPClientState.INIT){
+			if (this.tt != 0){				
+				try{
+					Thread.sleep(this.tt*1000+(long) (rand.nextFloat()*2000-1000));
+				}
+				catch(Exception e){
+					
+				}
+			}
+			else{
+				try {
+					/*The client SHOULD wait a random time between one and ten seconds to
+					   desynchronize the use of DHCP at startup.
+					  */
+					Thread.sleep((long)(rand.nextFloat()*9000+1000)); //  The client SHOULD wait a random time between one and ten seconds to desynchronize the use of DHCP at startup.
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} 
+			}
+			this.xid = rand.nextInt();
+			DHCPMessage message = new DHCPDiscover(xid,this.chaddr,DHCPDiscover.getDefaultOptions());
+			message.print(true);
+			udpclient.send(message.generateMessage());
+			this.state = DHCPClientState.SELECTING;
+		}
+	}
+	
+	/**
+	 * In the select state the client waits 10 seconds for incoming responses.
+	 * If no he didn't receive any offer, he returns to the INIT state. 
+	 * If he has received multiple offers he selects the one with the longest
+	 * lease time and he goes to the request state.
+	 *
+	 */
+	public void select(){
+		LocalDateTime endSelectTime = LocalDateTime.now().plusSeconds(10);
+		DHCPMessage bestOffer = null;
+		long bestLeaseTime= 0;
+		while (LocalDateTime.now().isBefore(endSelectTime)){
+			byte[] returnMessage = udpclient.receive();
+			if (returnMessage != null){
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); 
+				parsedMessage.print(false);
+				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPOFFER 
+					&& parsedMessage.getXid() == this.xid ){
+					long leaseTime = toUnsigned(ByteBuffer.wrap(parsedOptions.get(DHCPOption.IPADDRESSLEASETIME)).getInt());
+					if (leaseTime>=bestLeaseTime){
+						bestOffer = parsedMessage;
+						bestLeaseTime = leaseTime;
+					}
+				}
+			}
+		}
+		if (bestOffer != null){
+			this.serverIdentifier = bestOffer.getSiaddr();
+			this.offeredAddress = bestOffer.getYiaddr();
+			this.state = DHCPClientState.REQUESTING;
+			System.out.println("TO REQUESTING STATE");
+			this.tt = 0;
+		}
+		/*
+		 *  The client times out and retransmits the DHCPDISCOVER message if the client receives no DHCPOFFER messages.
+		 */
+		else {
+				if (this.tt == 0){
+					this.tt = 4; // delay before the first retransmission SHOULD be 4 seconds
+				}
+				else{
+					this.tt = Math.min(this.tt*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
+				}
+				this.state = DHCPClientState.INIT;
+				ErrorPrinter.print("Socket Timed Out, waiting " + this.tt + " seconds before retrying.");
+			}
+	}
+	
+	/**
+	 * In the request state the client broadcast a DHCPRequest with the parameters as selected in the selecting state.
+	 * 
+	 * Please note in a real DHCP implementation the request message send after selection must be broadcasted, in order
+	 * that the not selected DHCP servers can unlist their offer.
+	 * Please note in a real DHCP implementation the client must send an ARP probe to check if no one else is
+	 * already using the assigned IP address. If this is the case a DHCPDecline message must be send.
+	 */
+	public void request(){
+		int timeout = 0; 
+		Random rand = new Random();
+		while (this.state == DHCPClientState.REQUESTING){
+			if (timeout != 0){				
+				try{
+				Thread.sleep(timeout*1000+(long) (rand.nextFloat()*2000-1000));
+				}
+				catch(Exception e){}
+			}
+			DHCPMessage message = new DHCPRequest(this.xid,new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 },this.chaddr,DHCPRequest.getDefaultOptions(this.offeredAddress,this.serverIdentifier,20));
+			message.print(true);
+			LocalDateTime startTime = LocalDateTime.now();
+			udpclient.send(message.generateMessage());
+			boolean received = false;
+			while (!received && LocalDateTime.now().isBefore(startTime.plusSeconds(10))){
+				byte[] returnMessage = null;
+				returnMessage = udpclient.receive();
+				if (returnMessage != null){
+					DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); 
+					parsedMessage.print(false);
+					Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+					byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+					if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
+						&& parsedMessage.getXid() == this.xid ){
+						byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
+						ByteBuffer buf3 = ByteBuffer.wrap(t3);
+						long deltat = toUnsigned(buf3.getInt());
+						this.leaseTime = startTime.plusSeconds(deltat);
+						byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
+						if (t1 == null){
+							this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
+						}
+						else{
+							ByteBuffer buf1 = ByteBuffer.wrap(t1);
+							this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+						}
+					
+						byte[] t2 = parsedOptions.get(DHCPOption.REBINDINGTIME);
+						if (t2==null){
+							this.rebindingTime = startTime.plusSeconds((long)(0.875*deltat));
+						}
+						else{
+							ByteBuffer buf2 = ByteBuffer.wrap(t2);
+							this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+						}
+						this.state = DHCPClientState.BOUND;
+						this.receivedAddress = parsedMessage.getYiaddr();
+						received = true;
+						System.out.println("TO BOUND STATE");
+					}
+					else if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPNAK
+						&& parsedMessage.getXid() == this.xid ){
+						ErrorPrinter.print("Returning to INIT state due to DHCPNAK.");
+						this.state = DHCPClientState.INIT;
+						received = true;
+					}
+				
+				}
+			}
+			if (!received){
+				if (timeout == 0){
+					timeout = 4;
+				}
+				else if (timeout >= 64){
+					/*If the client
+				     receives neither a DHCPACK or a DHCPNAK message after employing the
+				     retransmission algorithm, the client reverts to INIT state and
+				     restarts the initialization process.*/
+					this.state = DHCPClientState.INIT;
+					// The client SHOULD notify the user that the initialization process has failed and is restarting.
+					ErrorPrinter.print("Returning to INIT state due to not receiving an answer.");
+				}
+				else{
+					timeout = timeout*2;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * If the client wants to give up its lease a DHCPRelease is send to the server.
+	 */
+	public void release(){
+		if (this.state == DHCPClientState.BOUND){	
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, DHCPClient.getChaddr(),DHCPRelease.getDefaultOptions());
+			message.print(true);
+			udpclient.send(message.generateMessage());
+			
+		}
+	}
+	
+	/**
+	 * If the client wants to renew it lease and he is before T2 he can unicast a DHCPRequest to the server that granted the lease.
+	 */
+	public void renew(){
+		int timeout = 0;
+		System.out.println("TO RENEWING STATE");
+		this.state = DHCPClientState.RENEWING;
+		while (this.state == DHCPClientState.RENEWING){
+			if (timeout != 0){				
+				try{
+					Thread.sleep(timeout*1000);
+				}
+				catch(Exception e){}
+			}
+			// This message will be unicast.
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions(null,null,20));
+			message.print(true);
+			LocalDateTime startTime = LocalDateTime.now();
+			udpclient.send(message.generateMessage());
+			boolean received = false;
+			while (!received && LocalDateTime.now().isBefore(startTime.plusSeconds(3))){
+				byte[] returnMessage = null;
+				returnMessage = udpclient.receive();
+			
+				if (returnMessage != null){		
+					 DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); 
+					 parsedMessage.print(false);
+					 Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+					 byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+					 if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
+						&& parsedMessage.getXid() == this.xid ){
+						 byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
+						 ByteBuffer buf3 = ByteBuffer.wrap(t3);
+						 long deltat = toUnsigned(buf3.getInt());
+						 this.leaseTime = startTime.plusSeconds(deltat);
+						 byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
+						 if (t1 == null){
+							 this.renewalTime = startTime.plusSeconds((long) (0.5*deltat));
+						 }
+						 else{
+							 ByteBuffer buf1 = ByteBuffer.wrap(t1);
+							 this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+						 }
+						 byte[] t2 = parsedOptions.get(DHCPOption.REBINDINGTIME);
+						 if (t2 == null){
+							 this.renewalTime = startTime.plusSeconds((long) (0.875*deltat));
+						 }
+						 else{
+							 ByteBuffer buf2 = ByteBuffer.wrap(t2);
+							 this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+						 }
+						 this.state = DHCPClientState.BOUND;
+						 received = true;
+						 System.out.println("TO BOUND STATE");
+					 }
+				} 
+			}
+			if (!received) {
+				// If the client receives no response to its DHCPREQUEST message, the client SHOULD wait one-half
+				// of the remaining time until T2 (in RENEWING state), down to a minimum of
+				// 60 seconds, before retransmitting the DHCPREQUEST message.
+				timeout = Math.max( 60, (int) (0.5*LocalDateTime.now().until(this.rebindingTime, ChronoUnit.SECONDS)) );
+				// If no DHCPACK arrives before time T2, the client moves to REBINDING
+				// state and sends (via broadcast) a DHCPREQUEST message to extend its
+				// lease.
+				if (this.rebindingTime.isBefore(LocalDateTime.now())){
+					this.rebind();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * TODO: commentary
+	 */
+	public void rebind(){
+		int timeout = 0;
+		System.out.println("TO REBINDING STATE");
+		this.state = DHCPClientState.REBINDING;
+		while (this.state == DHCPClientState.REBINDING){
+			if (timeout != 0){				
+				try{
+					Thread.sleep(timeout*1000);
+				}
+				catch(Exception e){}
+			}
+			// This message MUST be broadcast to the 0xffffffff IP broadcast address.
+			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions());
+			message.print(true);
+			byte[] returnMessage = null;
+			LocalDateTime startTime = LocalDateTime.now();
+			try{
+				udpclient.send(message.generateMessage());
+				returnMessage = udpclient.receive();
+			}	
+			catch (Exception e){
+			}
+			if (returnMessage != null){			
+				DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); // TODO: optionlength?
+				parsedMessage.print(false);
+				Map<DHCPOption, byte[]> parsedOptions = parsedMessage.getOptionsMap();
+				byte[] messageType = parsedOptions.get(DHCPOption.DHCPMESSAGETYPE);
+				if (DHCPbidirectionalMap.MessageTypeMap.getBackward(messageType[0]) == DHCPMessageType.DHCPACK
+						&& parsedMessage.getXid() == this.xid ){
+					byte[] t3 = parsedOptions.get(DHCPOption.IPADDRESSLEASETIME);
+					ByteBuffer buf3 = ByteBuffer.wrap(t3);
+					long deltat = toUnsigned(buf3.getInt());
+					this.leaseTime = startTime.plusSeconds(deltat);
+					byte[] t1= parsedOptions.get(DHCPOption.RENEWALTIME);
+					if (t1 == null){
+						this.renewalTime = startTime.plusSeconds((long)(0.5*deltat));
+					}
+					else {
+						ByteBuffer buf1 = ByteBuffer.wrap(t1);
+						this.renewalTime = startTime.plusSeconds(toUnsigned(buf1.getInt()));
+					}
+					byte[] t2 = parsedOptions.get(DHCPOption.REBINDINGTIME);
+					if (t2 == null){
+						this.rebindingTime = startTime.plusSeconds((long)(0.875*deltat));
+					}
+					else{
+						ByteBuffer buf2 = ByteBuffer.wrap(t2);
+						this.rebindingTime = startTime.plusSeconds(toUnsigned(buf2.getInt()));
+					}
+					this.state = DHCPClientState.BOUND;
+					System.out.println("TO BOUND STATE");
+				}
+			} else {
+				// If the client receives no response to its DHCPREQUEST message, the client SHOULD wait one-half of
+				// the remaining lease time (in REBINDING state), down to a minimum of
+				// 60 seconds, before retransmitting the DHCPREQUEST message.
+				timeout = Math.max( 60, (int) (0.5*LocalDateTime.now().until(this.leaseTime, ChronoUnit.SECONDS)) );
+				// If the lease expires before the client receives a DHCPACK, the client
+				// moves to INIT state.
+				if (this.leaseTime.isBefore(LocalDateTime.now())){
+					this.state = DHCPClientState.INIT;
+					System.out.println("TO INIT STATE");
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Method that converts a signed int to an unsigned long (e.g. -1 = 0xffffffff => 2**32-1).
+	 * 
+	 * @param 	signed
+	 * 				The signed integer to be converted.
+	 * @return 	The unsigned long from which the 4 least significant bytes equal the 4 bytes of the signed int. 
+	 */
+	private long toUnsigned(int signed){
+		return (long)(signed) &0x00000000ffffffffL;
+	}
+	
+	/**
+	 * TODO: commentary
+	 */
+	public void run(){
+		while (true){
+			if (this.state == DHCPClientState.INIT){
+				this.init();
+				this.select();
+			} 
+			else if (this.state == DHCPClientState.REQUESTING){
+			
+				this.request();
+			}
+			else {
+				if (this.renewalTime.isBefore(LocalDateTime.now())){
+					this.renew();
+				}		
+			}
+		}
+	}
+	
+	/**
+	 * A method that gets the hardware address of this client. If this is not available, due to insufficient permissions,
+	 * a random MAC-address is generated.
+	 * 
+	 * @return 	A MAC-address, if possible the one of the client's PC or else a random MAC like address.
+	 */
+	public static byte[] getChaddr(){
+		try{
+			InetAddress ip = InetAddress.getLocalHost();
+			NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+			byte[] mac = network.getHardwareAddress();
+			byte[] chaddr = new byte[16];
+			byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+			System.arraycopy(mac, 0, chaddr, 0, 6);
+			System.arraycopy(empty, 0, chaddr, 6, 10);
+			return chaddr;
+		}
+		catch (Exception e){
+			Random rand = new Random();
+			byte[] mac = new byte[6];
+			rand.nextBytes(mac);
+			byte[] chaddr = new byte[16];
+			byte[] empty = new byte[] { (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+				 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+			System.arraycopy(mac, 0, chaddr, 0, 6);
+			System.arraycopy(empty, 0, chaddr, 6, 10);
+			return chaddr;
+		}
+	}
+	
+}

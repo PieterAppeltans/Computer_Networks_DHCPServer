@@ -38,7 +38,7 @@ public class UDPClient {
 		this.receiveSize = receiveSize;
 		try {
 			this.clientSocket =  new DatagramSocket();
-			this.clientSocket.setSoTimeout(10000);
+			this.clientSocket.setSoTimeout(1000);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}  
@@ -82,9 +82,19 @@ public class UDPClient {
 	 * @throws 	IOException
 	 * 				When the message couldn't be sent.
 	 */
-	public void send(byte[] sendData) throws IOException{         
+	public void send(byte[] sendData) {         
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, this.serverIP, this.serverPort);
-		this.clientSocket.send(sendPacket);
+		boolean succesFullySended = false;
+		while (!succesFullySended){
+				try {
+					this.clientSocket.send(sendPacket);
+					succesFullySended = true;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			
+			
+		}
 		}
 	
 	/**

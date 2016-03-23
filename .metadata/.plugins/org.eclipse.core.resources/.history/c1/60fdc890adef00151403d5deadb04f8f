@@ -1,0 +1,7 @@
+
+public class NoIPAvailable extends Exception {
+	public NoIPAvailbale(String error){
+		super(error);
+	}
+
+}
