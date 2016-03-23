@@ -264,7 +264,7 @@ public class DHCPClient {
 	 */
 	public void release(){
 		if (this.state == DHCPClientState.BOUND){	
-			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, this.chaddr,DHCPRelease.getDefaultOptions());
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, DHCPClient.getChaddr(),DHCPRelease.getDefaultOptions());
 			message.print(true);
 			udpclient.send(message.generateMessage());
 			
