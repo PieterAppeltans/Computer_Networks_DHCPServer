@@ -111,16 +111,13 @@ public class IPAddressKeeper {
 		 */
 		while ((inUse(result) || inOffer(result)) && counter<50){
 			Random rand = new Random();
-			byte[] temp = new byte[result.length];
+			byte[] temp = new byte[result.length - (maxMaskValue+1)];
 			rand.nextBytes(temp);
-			for (int k = (maxMaskValue+1);k<result.length;k++){
+			for (int k = result.length - (maxMaskValue+1);k<result.length;k++){
 				int s2 = (int) start[k] & 0xff;
 				int e2 = (int) end[k] & 0xff;
 				int r = (int) temp[k] & 0xff;
-				System.out.print(s2+ '-');
-				System.out.print(e2+ '-');
-				System.out.println(r);
-				result[k] = (byte) ((e2-s2)*((double)r/255)+s2);
+				result[k] = (byte) ((e2-s2)*(r/255)+s2);
 			}
 			counter++;
 		}
@@ -201,9 +198,6 @@ public class IPAddressKeeper {
 	 * @return	A boolean representing if the given client currently has a lease on the given IP address.
 	 */
 	public synchronized boolean hasIP(byte[]clientIdentifier,byte[] IP){
-		if (!inUse(IP)){
-			return false;
-		}
 		InetAddress inetaddress;
 		try {
 			inetaddress = InetAddress.getByAddress(IP);
@@ -372,7 +366,7 @@ public class IPAddressKeeper {
 		for (InetAddress address:map.keySet()){
 			byte[] chaddr = (byte[]) map.get(address)[0];
 			LocalDateTime localTime = (LocalDateTime) map.get(address)[1];
-			System.out.println(address.toString()+" Leaser: "+ DHCPMessage.printByteArrayHexa(chaddr) +" Until: "+localTime.toString());
+			System.out.println(address.toString()+" Leaser: "+Arrays.toString(chaddr)+" Until: "+localTime.toString());
 		}
 	}
 	
