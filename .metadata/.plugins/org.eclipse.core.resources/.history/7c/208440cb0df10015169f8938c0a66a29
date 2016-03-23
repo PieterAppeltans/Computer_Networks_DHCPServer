@@ -120,7 +120,7 @@ public class IPAddressKeeper {
 				System.out.print(s2+ '-');
 				System.out.print(e2+ '-');
 				System.out.println(r);
-				result[k] = (byte) ((e2-s2)*((double)r/255)+s2);
+				result[k] = (byte) ((e2-s2)*(r/255)+s2);
 			}
 			counter++;
 		}
