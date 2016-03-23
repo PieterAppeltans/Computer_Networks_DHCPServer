@@ -84,8 +84,8 @@ public class DHCPClient {
 	private int tt = 0;
 	
 	/**
-	 * The user is in the INIT state he must broadcast a DHCPDiscover and go to
-	 * the selecting state.
+	 * The user is in the INIT state. After waiting a random time between one and ten seconds to desynchronize the use of DHCP at startup,
+	 * he must broadcast a DHCPDiscover and go to the selecting state.
 	 */
 	public void init() {
 		Random rand = new Random();
@@ -101,11 +101,8 @@ public class DHCPClient {
 			}
 			else{
 				try {
-					/*The client SHOULD wait a random time between one and ten seconds to
-					   desynchronize the use of DHCP at startup.
-					  */
 					System.out.println("Random startup desynchronisation wait.");
-					Thread.sleep((long)(rand.nextFloat()*9000+1000)); //  The client SHOULD wait a random time between one and ten seconds to desynchronize the use of DHCP at startup.
+					Thread.sleep((long)(rand.nextFloat()*9000+1000));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} 
@@ -119,11 +116,10 @@ public class DHCPClient {
 	}
 	
 	/**
-	 * In the select state the client waits 10 seconds for incoming responses.
-	 * If no he didn't receive any offer, he returns to the INIT state. 
-	 * If he has received multiple offers he selects the one with the longest
-	 * lease time and he goes to the request state.
-	 *
+	 * In the selecting state the client waits 10 seconds for incoming responses. If he didn't receive any offer, he returns to 
+	 * the INIT state to send a new DHCP discover message with a delay of 4 seconds. In the subsequent iterations the delay is doubled
+	 * up to a maximum of 64 second. If he has received multiple offers, he selects the one with the longest lease time and goes to
+	 * the requesting state.
 	 */
 	public void select(){
 		LocalDateTime endSelectTime = LocalDateTime.now().plusSeconds(10);
@@ -160,10 +156,10 @@ public class DHCPClient {
 		 */
 		else {
 				if (this.tt == 0){
-					this.tt = 4; // delay before the first retransmission SHOULD be 4 seconds
+					this.tt = 4;
 				}
 				else{
-					this.tt = Math.min(this.tt*2, 64); // The retransmission delay SHOULD be doubled with subsequent retransmissions up to a maximum of 64 seconds
+					this.tt = Math.min(this.tt*2, 64);
 				}
 				this.state = DHCPClientState.INIT;
 				
@@ -171,12 +167,12 @@ public class DHCPClient {
 	}
 	
 	/**
-	 * In the request state the client broadcast a DHCPRequest with the parameters as selected in the selecting state.
+	 * In the requesting state the client broadcasts a DHCPRequest with the parameters as selected in the selecting state.
 	 * 
 	 * Please note in a real DHCP implementation the request message send after selection must be broadcasted, in order
-	 * that the not selected DHCP servers can unlist their offer.
-	 * Please note in a real DHCP implementation the client must send an ARP probe to check if no one else is
-	 * already using the assigned IP address. If this is the case a DHCPDecline message must be send.
+	 * that the not selected DHCP servers can unlist their offer. Please note in a real DHCP implementation the client
+	 * must send an ARP probe to check if no one else is already using the assigned IP address. If this is the case a
+	 * DHCPDecline message must be send.
 	 */
 	public void request(){
 		int timeout = 0; 
@@ -249,7 +245,6 @@ public class DHCPClient {
 				     retransmission algorithm, the client reverts to INIT state and
 				     restarts the initialization process.*/
 					this.state = DHCPClientState.INIT;
-					// The client SHOULD notify the user that the initialization process has failed and is restarting.
 					ErrorPrinter.print("Returning to INIT state due to not receiving an answer.");
 				}
 				else{
@@ -260,19 +255,8 @@ public class DHCPClient {
 	}
 	
 	/**
-	 * If the client wants to give up its lease a DHCPRelease is send to the server.
-	 */
-	public void release(){
-		if (this.state == DHCPClientState.BOUND){	
-			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, this.chaddr,DHCPRelease.getDefaultOptions());
-			message.print(true);
-			udpclient.send(message.generateMessage());
-			this.state = DHCPClientState.INIT;
-		}
-	}
-	
-	/**
-	 * If the client wants to renew it lease and he is before T2 he can unicast a DHCPRequest to the server that granted the lease.
+	 * If the client wants to renew it's lease and T2 has not yet passed, he can unicast a DHCPRequest to the server that granted the lease 
+	 * to renew it.
 	 */
 	public void renew(){
 		int timeout = 0;
@@ -286,7 +270,6 @@ public class DHCPClient {
 				}
 				catch(Exception e){}
 			}
-			// This message will be unicast.
 			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions(null,null,20));
 			message.print(true);
 			LocalDateTime startTime = LocalDateTime.now();
@@ -295,7 +278,6 @@ public class DHCPClient {
 			while (!received && LocalDateTime.now().isBefore(startTime.plusSeconds(3))){
 				byte[] returnMessage = null;
 				returnMessage = udpclient.receive();
-			
 				if (returnMessage != null){		
 					 DHCPMessage parsedMessage = MessageParser.parseMessage(returnMessage,312); 
 					 parsedMessage.print(false);
@@ -345,7 +327,7 @@ public class DHCPClient {
 	}
 	
 	/**
-	 * If the client want to extends it lease and its after T2 and before end of lease the client must multicast its DHCPRequest.
+	 * If the client want to extends it's lease and T2 has passed but the lease didn't end yet, the client must broadcast it's DHCPRequest.
 	 */
 	public void rebind(){
 		int timeout = 0;
@@ -358,7 +340,6 @@ public class DHCPClient {
 				}
 				catch(Exception e){}
 			}
-			// This message MUST be broadcast to the 0xffffffff IP broadcast address.
 			DHCPMessage message = new DHCPRequest(this.xid,this.receivedAddress,this.chaddr,DHCPRequest.getDefaultOptions());
 			message.print(true);
 			
@@ -419,6 +400,18 @@ public class DHCPClient {
 	}
 	
 	/**
+	 * If the client wants to give up it's lease a DHCPRelease is sent to the server. This is not obligatory.
+	 */
+	public void release(){
+		if (this.state == DHCPClientState.BOUND){	
+			DHCPMessage message = new DHCPRelease(this.xid,this.receivedAddress, this.chaddr,DHCPRelease.getDefaultOptions());
+			message.print(true);
+			udpclient.send(message.generateMessage());
+			this.state = DHCPClientState.INIT;
+		}
+	}
+	
+	/**
 	 * Method that converts a signed int to an unsigned long (e.g. -1 = 0xffffffff => 2**32-1).
 	 * 
 	 * @param 	signed
@@ -430,7 +423,8 @@ public class DHCPClient {
 	}
 	
 	/**
-	 * Method to start the client. Depending on his state he calls the suited functions 
+	 * Method to run the client. Depending on his state he calls the appropriate functions. After initializing and selecting an offer,
+	 * the client requests an IP address from the selected server and keeps renewing it as long as possible.
 	 */
 	public void run(){
 		while (true){
@@ -439,13 +433,11 @@ public class DHCPClient {
 				this.select();
 			} 
 			else if (this.state == DHCPClientState.REQUESTING){
-			
 				this.request();
 			}
 			else {
 				if (this.renewalTime.isBefore(LocalDateTime.now())){
-					//this.renew();
-					this.release();
+					this.renew();
 				}		
 			}
 		}

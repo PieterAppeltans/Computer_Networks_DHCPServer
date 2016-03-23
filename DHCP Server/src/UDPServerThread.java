@@ -2,12 +2,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-// TODO: delete?
+
 public class UDPServerThread implements Runnable {
 
 	private DatagramSocket serverSocket = null;
     private DatagramPacket receivePacket = null;
     private DHCPServer server;
+    
     public UDPServerThread(DatagramSocket socket, DatagramPacket packet,DHCPServer server) {
         this.serverSocket = socket;
         this.receivePacket = packet;

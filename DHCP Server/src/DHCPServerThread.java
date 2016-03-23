@@ -78,8 +78,8 @@ public class DHCPServerThread implements Runnable {
     
     /**
 	 * Returns a DHCPOffer message as a response to the received DHCPDiscover message providing 
-	 * 			an offered IP, the server address and a lease time if an IP is available.
-	 * If no NoIPAvailable then null is returned.
+	 * an offered IP, the server address and a lease time if an IP is available. If no IP is available,
+	 * null is returned.
 	 * 
 	 * @param 	message
 	 * 				The received DHCPDiscover message.
@@ -101,7 +101,7 @@ public class DHCPServerThread implements Runnable {
 		byte[] t = options.get(DHCPOption.IPADDRESSLEASETIME);
 		long leaseTime = convertLeaseTime(t);
 		/*
-		 * If the user don't specify a requested IP or an invalid IP or an IP that is already in use 
+		 * If the user doesn't specify a requested IP or an invalid IP or an IP that is already in use 
 		 * then the server tries to generate a new IP. If the server is unable to generate one null is 
 		 * returned.  
 		 */
@@ -130,9 +130,11 @@ public class DHCPServerThread implements Runnable {
 		
 	}
 	/**
-	 * A method that converts a byte array to a valid lease time
-	 * @param t the byte array to be converted
-	 * @return A number between addressKeeper.getMinLeaseTime() and addressKeeper.getMaxLeaseTime()
+	 * A method that converts a byte array to a valid lease time.
+	 * 
+	 * @param 	t
+	 * 				The byte array to be converted.
+	 * @return 	A number between addressKeeper.getMinLeaseTime() and addressKeeper.getMaxLeaseTime().
 	 */
 	private long convertLeaseTime(byte[] t){
 		if (t == null){
